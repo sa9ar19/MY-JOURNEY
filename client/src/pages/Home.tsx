@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import { ArrowRight } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
+import {trpc} from "@/lib/trpc";
 import {
   FaFacebook,
   FaYoutube,
@@ -44,6 +45,8 @@ function HeroSlideshow() {
 
 export default function Home() {
   const [, navigate] = useLocation();
+    const { data: stats, isLoading } = trpc.stats.get.useQuery();
+
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -110,7 +113,7 @@ export default function Home() {
                     About This Journey
                   </p>
                   <h2 className="font-serif text-5xl lg:text-6xl font-bold leading-tight text-foreground tracking-tight">
-                    Capturing Moments,
+                    Capturing Moments,  
                     <span className="text-muted-foreground/60 italic">
                       Sharing Stories
                     </span>
@@ -152,13 +155,14 @@ export default function Home() {
         </section>
 
         {/* Stats Section */}
-        <section className="section-padding bg-secondary/30">
+        {/* Stats Section */}
+    <section className="section-padding bg-secondary/30">
           <div className="container">
             <div className="grid sm:grid-cols-3 gap-8 text-center">
               {[
-                { number: "15+", label: "Destinations" },
-                { number: "500+", label: "Photos" },
-                { number: "40+", label: "Stories" },
+                { number: isLoading ? "..." : `${stats?.destinations || 0}` , label: "Destinations" },
+                { number: isLoading ? "..." : `${stats?.photos || 0}` , label: "Photos" },
+                { number: isLoading ? "..." : `${stats?.stories || 0}` , label: "Stories" },
               ].map((stat, i) => (
                 <div
                   key={i}

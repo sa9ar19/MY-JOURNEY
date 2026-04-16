@@ -9,15 +9,11 @@ import {
 } from "react-icons/fa6";
 
 const ICON_MAP: Record<string, React.ReactNode> = {
-  github: <Github size={18} />,
-  linkedin: <Linkedin size={18} />,
-  twitter: <Twitter size={18} />,
-  instagram: <Instagram size={18} />,
   email: <Mail size={18} />,
 };
 
 export default function Footer() {
-  const { data: socialLinks } = trpc.social.list.useQuery();
+  
 
   return (
     <footer className="border-t border-border bg-secondary/30">
@@ -29,7 +25,7 @@ export default function Footer() {
               My Journey
             </p>
             <p className="text-sm text-muted-foreground">
-              Travels, treks, and life experiences
+              Travels, images, and life experiences
             </p>
           </div>
 
@@ -82,7 +78,7 @@ export default function Footer() {
         <div className="divider-line my-8" />
 
         <p className="text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} My Journey. All rights reserved. sa9ar
+          © {new Date().getFullYear()} My Journey. All rights reserved sa9ar.com
         </p>
       </div>
     </footer>

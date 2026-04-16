@@ -22,6 +22,7 @@ import {
   getBlogPostById,
   updateBlogPost,
   createNewsletterSignup,
+  getStats,
 } from "./db";
 
 // Admin-only procedure
@@ -192,7 +193,7 @@ export const appRouter = router({
   }),
 
   // Newsletter
-  
+
   newsletter: router({
     signup: publicProcedure
       .input(
@@ -206,6 +207,10 @@ export const appRouter = router({
       .mutation(({ input }) => {
         return createNewsletterSignup(input);
       }),
+  }),
+
+  stats: router({
+    get: publicProcedure.query(() => getStats()),
   }),
 });
 

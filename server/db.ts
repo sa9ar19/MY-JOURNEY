@@ -1,4 +1,4 @@
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import {
@@ -190,6 +190,22 @@ export async function createNewsletterSignup(data: InsertNewsletterSignup) {
   if (!db) throw new Error("Database not available");
   const result = await db.insert(newsletterSignups).values(data).returning();
   return result[0];
+}
+
+// ── Stats ───────────────────────────────────────────────────────────────────
+export async function getStats() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const [destCount] = await db.select({ count: sql<number>`count(*)` }).from(destinations);
+  const [photoCount] = await db.select({ count: sql<number>`count(*)` }).from(galleryPhotos);
+  const [blogCount] = await db.select({ count: sql<number>`count(*)` }).from(blogPosts);
+
+  return {
+    destinations: Number(destCount?.count || 0),
+    photos: Number(photoCount?.count || 0),
+    stories: Number(blogCount?.count || 0),
+  };
 }
 
 

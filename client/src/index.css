@@ -92,6 +92,10 @@
     letter-spacing: -0.01em;
   }
 
+  p {
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
   ::selection {
     background-color: #5a5a54;
     color: #ffffff;

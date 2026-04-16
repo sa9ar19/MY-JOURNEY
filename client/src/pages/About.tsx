@@ -38,7 +38,7 @@ export default function About() {
                   Hello, I'm Sagar Khadka
                 </h2>
                 <p className="text-muted-foreground leading-relaxed mb-4">
-                  I'm a passionate traveler and photographer who believes that
+                  I'm a masters in IT(Cyber Security) student at Charles Darwin University, Sydney. Also a passionate traveler and photographer who believes that
                   every journey tells a story. For the past several years, I've
                   been exploring the world, capturing moments, and sharing
                   experiences through my lens.
@@ -166,19 +166,13 @@ export default function About() {
                       "Shooting travel and landscape photography across Asia and Europe. Delivering content for travel blogs, tourism campaigns, and editorial publications.",
                   },
                   {
-                    role: "Content Creator & Travel Blogger",
-                    company: "Personal Brand – sagarkhadka.com",
+                    role: "Content Creater & Travel Blogger",
+                    company: "Personal Brand – sa9ar.com",
                     period: "2020 – Present",
                     description:
                       "Writing long-form travel stories, guides, and photography essays. Growing an audience through storytelling and visual content across social platforms.",
                   },
-                  {
-                    role: "Photography Assistant",
-                    company: "Himalayan Frames Studio, Kathmandu",
-                    period: "2019 – 2021",
-                    description:
-                      "Assisted lead photographers on portrait and event shoots. Managed post-processing workflows and maintained studio equipment.",
-                  },
+                 
                 ].map((exp, i) => (
                   <div
                     key={i}
@@ -218,11 +212,18 @@ export default function About() {
                     label: "Explore Destinations",
                     href: "/destinations",
                   },
+                  
                   {
                     title: "Photography",
                     desc: "Capturing the beauty of nature and culture",
                     label: "Explore Gallery",
                     href: "/gallery",
+                  },
+                  {
+                    title: "Travelling",
+                    desc: "Exploring new places and new experiences",
+                    label: "Explore Destinations",
+                    href: "/destinations",
                   },
                   {
                     title: "Storytelling",
