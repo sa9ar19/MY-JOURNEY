@@ -105,7 +105,7 @@ export default function ViewDestination() {
         </div>
       )}
 
-      <main className="flex-1 max-w-6xl mx-auto w-full px-6 py-16">
+      <main className="flex-1 max-w-[95%] mx-auto w-full px-6 py-16">
         {/* Header Section */}
         <div className="text-center mb-16">
           {!isEditingInfo ? (

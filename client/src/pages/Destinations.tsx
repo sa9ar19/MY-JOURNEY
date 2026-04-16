@@ -87,7 +87,7 @@ export default function Destinations() {
         </section>
 
         <section className="px-6 md:px-12 pb-24">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-[80%] mx-auto">
             {isLoading ? (
               <div className="flex items-center justify-center py-32">
                 <Loader2 className="animate-spin text-muted-foreground" size={32} />
