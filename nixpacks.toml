@@ -1,0 +1,12 @@
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+aptPkgs = ["libatomic1"]
+
+[phases.build]
+cmds = [
+  "cd client && npm install && npm run build",
+  "cd server && npm install"
+]
+
+[phases.start]
+cmd = "node server/_core/index.js"
