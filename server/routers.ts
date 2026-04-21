@@ -5,6 +5,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { uploadImageToCloudinary } from "./cloudinary";
+import { sendWelcomeEmail } from "./email";
 import {
   listDestinations,
   getDestinationById,
@@ -194,20 +195,31 @@ export const appRouter = router({
 
   // Newsletter
 
-  newsletter: router({
-    signup: publicProcedure
-      .input(
-        z.object({
-          name: z.string().min(1),
-          email: z.string().email(),
-          contact: z.string().optional(),
-          message: z.string().optional(),
-        })
-      )
-      .mutation(({ input }) => {
-        return createNewsletterSignup(input);
-      }),
-  }),
+newsletter: router({
+  signup: publicProcedure
+    .input(
+      z.object({
+        name: z.string().min(1),
+        email: z.string().email(),
+        contact: z.string().optional(),
+        message: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      // Save to database
+      const signup = await createNewsletterSignup(input);
+      
+      // Send welcome email (import sendWelcomeEmail at top)
+      try {
+        await sendWelcomeEmail(input.email, input.name);
+      } catch (error) {
+        console.error('[Newsletter] Email failed but signup saved:', error);
+        // Don't throw - signup is still successful even if email fails
+      }
+      
+      return signup;
+    }),
+}),
 
   stats: router({
     get: publicProcedure.query(() => getStats()),

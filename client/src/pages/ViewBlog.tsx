@@ -206,6 +206,8 @@ export default function ViewBlog() {
             </div>
           )}
 
+          
+
           {/* Content Section */}
           <div className="max-w-2xl mx-auto">
             {!isEditing ? (

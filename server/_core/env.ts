@@ -22,4 +22,7 @@ export const ENV = {
   cloudinaryApiKey: process.env.CLOUDINARY_API_KEY ?? "873821838528726",
   cloudinaryApiSecret:
     process.env.CLOUDINARY_API_SECRET ?? "JK23d1ZiUDMV6zcXk4wCgQRjIaw",
+
+  user: process.env.GMAIL_USER ?? "khadka.sa9ar@gmail.com", // khadka.sa9ar@gmail.com
+  pass: process.env.GMAIL_APP_PASSWORD ?? "idcb lzaa jaxt tdhx",
 };
