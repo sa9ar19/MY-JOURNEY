@@ -17,7 +17,6 @@ import EditDestination from "./pages/EditDestination";
 import DestinationDetail from "./pages/DestinationDetail";
 import ViewDestination from "./pages/ViewDestination";
 
-
 function Router() {
   return (
     <Switch>
@@ -33,7 +32,9 @@ function Router() {
       <Route path="/destinations" component={Destinations} />
       {/* <Route path="/destinations/:slug" component={EditDestination} /> */}
       <Route path="/destinations/:id" component={ViewDestination} />
-      
+      <Route path="/editDestinations/:id" component={EditDestination} />
+      <Route path= "/destinations/edit/:id" component={EditDestination} />
+
       <Route component={NotFound} />
     </Switch>
   );

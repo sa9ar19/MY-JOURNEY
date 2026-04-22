@@ -24,6 +24,15 @@ import {
   updateBlogPost,
   createNewsletterSignup,
   getStats,
+  togglePhotoLike,
+  getPhotoLikes,
+  hasUserLikedPhoto,
+  toggleBlogLike,
+  getBlogLikes,
+  hasUserLikedBlog,
+  createBlogComment,
+  getBlogComments,
+  deleteBlogComment,
 } from "./db";
 
 // Admin-only procedure
@@ -92,10 +101,20 @@ export const appRouter = router({
           destinationName: z.string().optional(),
           destinationDetail: z.string().optional(),
           coverUrl: z.string().optional(),
+          coverImageBase64: z.string().optional(),
         })
       )
-      .mutation(({ input }) => {
-        const { id, ...data } = input;
+      .mutation(async ({ input }) => {
+        const { id, coverImageBase64, ...data } = input;
+
+        if (coverImageBase64) {
+          const coverUrl = await uploadImageToCloudinary(
+            coverImageBase64,
+            "destinations"
+          );
+          data.coverUrl = coverUrl;
+        }
+        
         return updateDestination(id, data);
       }),
 
@@ -140,6 +159,28 @@ export const appRouter = router({
     deletePhoto: adminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(({ input }) => deletePhoto(input.id)),
+  }),
+
+  // Add after the destinations router (around line 142)
+  photos: router({
+    // Toggle like on a photo
+    toggleLike: protectedProcedure
+      .input(z.object({ photoId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        return togglePhotoLike(input.photoId, ctx.user!.openId);
+      }),
+
+    // Get likes count and user's like status
+    getLikeInfo: publicProcedure
+      .input(z.object({ photoId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const count = await getPhotoLikes(input.photoId);
+        const hasLiked = await hasUserLikedPhoto(
+          input.photoId,
+          ctx.user?.openId
+        );
+        return { count, hasLiked };
+      }),
   }),
 
   // Blogs
@@ -191,35 +232,76 @@ export const appRouter = router({
     delete: adminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(({ input }) => deleteBlogPost(input.id)),
+
+    toggleLike: protectedProcedure
+      .input(z.object({ blogId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        return toggleBlogLike(input.blogId, ctx.user!.openId);
+      }),
+
+    getLikeInfo: publicProcedure
+      .input(z.object({ blogId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const count = await getBlogLikes(input.blogId);
+        const hasLiked = await hasUserLikedBlog(input.blogId, ctx.user?.openId);
+        return { count, hasLiked };
+      }),
+
+    addComment: protectedProcedure
+      .input(
+        z.object({
+          blogId: z.number(),
+          comment: z.string().min(1).max(1000),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        return createBlogComment({
+          blogId: input.blogId,
+          userId: ctx.user!.openId,
+          userName: ctx.user!.name || "Anonymous",
+          userEmail: ctx.user!.email || undefined,
+          comment: input.comment,
+        });
+      }),
+
+    getComments: publicProcedure
+      .input(z.object({ blogId: z.number() }))
+      .query(({ input }) => getBlogComments(input.blogId)),
+
+    deleteComment: protectedProcedure
+      .input(z.object({ commentId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        return deleteBlogComment(input.commentId, ctx.user!.openId);
+      }),
   }),
 
   // Newsletter
 
-newsletter: router({
-  signup: publicProcedure
-    .input(
-      z.object({
-        name: z.string().min(1),
-        email: z.string().email(),
-        contact: z.string().optional(),
-        message: z.string().optional(),
-      })
-    )
-    .mutation(async ({ input }) => {
-      // Save to database
-      const signup = await createNewsletterSignup(input);
-      
-      // Send welcome email (import sendWelcomeEmail at top)
-      try {
-        await sendWelcomeEmail(input.email, input.name);
-      } catch (error) {
-        console.error('[Newsletter] Email failed but signup saved:', error);
-        // Don't throw - signup is still successful even if email fails
-      }
-      
-      return signup;
-    }),
-}),
+  newsletter: router({
+    signup: publicProcedure
+      .input(
+        z.object({
+          name: z.string().min(1),
+          email: z.string().email(),
+          contact: z.string().optional(),
+          message: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        // Save to database
+        const signup = await createNewsletterSignup(input);
+
+        // Send welcome email (import sendWelcomeEmail at top)
+        try {
+          await sendWelcomeEmail(input.email, input.name);
+        } catch (error) {
+          console.error("[Newsletter] Email failed but signup saved:", error);
+          // Don't throw - signup is still successful even if email fails
+        }
+
+        return signup;
+      }),
+  }),
 
   stats: router({
     get: publicProcedure.query(() => getStats()),

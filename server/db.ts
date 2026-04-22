@@ -2,16 +2,26 @@ import { eq, desc, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import {
-  destinations, Destination, InsertDestination,
-  InsertUser, users,
-  galleryPhotos, GalleryPhoto, InsertGalleryPhoto,
-  blogPosts, BlogPost, InsertBlogPost,
-  newsletterSignups, InsertNewsletterSignup,
+  destinations,
+  Destination,
+  InsertDestination,
+  InsertUser,
+  users,
+  galleryPhotos,
+  GalleryPhoto,
+  InsertGalleryPhoto,
+  blogPosts,
+  BlogPost,
+  InsertBlogPost,
+  newsletterSignups,
+  InsertNewsletterSignup,
+  photoLikes,
+  blogLikes,
+  blogComments,
+  InsertBlogComment,
   // socialLinks, SocialLink, InsertSocialLink,
 } from "../drizzle/schema";
-import { ENV } from './_core/env';
-
-
+import { ENV } from "./_core/env";
 
 let _db: any = null;
 
@@ -21,7 +31,10 @@ export async function getDb() {
       const pool = new Pool({
         connectionString: process.env.DATABASE_URL,
         // Railway PostgreSQL often requires SSL in production
-        ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+        ssl:
+          process.env.NODE_ENV === "production"
+            ? { rejectUnauthorized: false }
+            : false,
       });
       _db = drizzle(pool);
       console.log("[Database] Connected to PostgreSQL successfully");
@@ -36,7 +49,10 @@ export async function getDb() {
 export async function upsertUser(user: InsertUser): Promise<void> {
   if (!user.openId) throw new Error("User openId is required for upsert");
   const db = await getDb();
-  if (!db) { console.warn("[Database] Cannot upsert user: database not available"); return; }
+  if (!db) {
+    console.warn("[Database] Cannot upsert user: database not available");
+    return;
+  }
   try {
     const values: InsertUser = { openId: user.openId };
     const updateSet: Record<string, unknown> = {};
@@ -50,16 +66,25 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet[field] = normalized;
     };
     textFields.forEach(assignNullable);
-    if (user.lastSignedIn !== undefined) { values.lastSignedIn = user.lastSignedIn; updateSet.lastSignedIn = user.lastSignedIn; }
-    if (user.role !== undefined) { values.role = user.role; updateSet.role = user.role; }
-    else if (user.openId === ENV.ownerOpenId) { values.role = 'admin'; updateSet.role = 'admin'; }
+    if (user.lastSignedIn !== undefined) {
+      values.lastSignedIn = user.lastSignedIn;
+      updateSet.lastSignedIn = user.lastSignedIn;
+    }
+    if (user.role !== undefined) {
+      values.role = user.role;
+      updateSet.role = user.role;
+    } else if (user.openId === ENV.ownerOpenId) {
+      values.role = "admin";
+      updateSet.role = "admin";
+    }
     if (!values.lastSignedIn) values.lastSignedIn = new Date();
-    if (Object.keys(updateSet).length === 0) updateSet.lastSignedIn = new Date();
-    
+    if (Object.keys(updateSet).length === 0)
+      updateSet.lastSignedIn = new Date();
+
     // PostgreSQL uses onConflictDoUpdate instead of onDuplicateKeyUpdate
-    await db.insert(users).values(values).onConflictDoUpdate({ 
+    await db.insert(users).values(values).onConflictDoUpdate({
       target: users.openId,
-      set: updateSet 
+      set: updateSet,
     });
   } catch (error) {
     console.error("[Database] Failed to upsert user:", error);
@@ -69,8 +94,15 @@ export async function upsertUser(user: InsertUser): Promise<void> {
 
 export async function getUserByOpenId(openId: string) {
   const db = await getDb();
-  if (!db) { console.warn("[Database] Cannot get user: database not available"); return undefined; }
-  const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
+  if (!db) {
+    console.warn("[Database] Cannot get user: database not available");
+    return undefined;
+  }
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.openId, openId))
+    .limit(1);
   return result.length > 0 ? result[0] : undefined;
 }
 
@@ -82,14 +114,22 @@ export async function listDestinations(): Promise<Destination[]> {
   return db.select().from(destinations).orderBy(destinations.createdAt);
 }
 
-export async function getDestinationById(id: number): Promise<Destination | undefined> {
+export async function getDestinationById(
+  id: number
+): Promise<Destination | undefined> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.select().from(destinations).where(eq(destinations.id, id)).limit(1);
+  const result = await db
+    .select()
+    .from(destinations)
+    .where(eq(destinations.id, id))
+    .limit(1);
   return result[0];
 }
 
-export async function createDestination(data: InsertDestination): Promise<Destination> {
+export async function createDestination(
+  data: InsertDestination
+): Promise<Destination> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   // PostgreSQL uses .returning() to get the inserted row
@@ -97,7 +137,10 @@ export async function createDestination(data: InsertDestination): Promise<Destin
   return result[0];
 }
 
-export async function updateDestination(id: number, data: Partial<InsertDestination>): Promise<void> {
+export async function updateDestination(
+  id: number,
+  data: Partial<InsertDestination>
+): Promise<void> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(destinations).set(data).where(eq(destinations.id, id));
@@ -111,13 +154,21 @@ export async function deleteDestination(id: number): Promise<void> {
 
 // ── Gallery Photos ──────────────────────────────────────────────────────────
 
-export async function getPhotosByDestination(destinationId: number): Promise<GalleryPhoto[]> {
+export async function getPhotosByDestination(
+  destinationId: number
+): Promise<GalleryPhoto[]> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return db.select().from(galleryPhotos).where(eq(galleryPhotos.destinationId, destinationId)).orderBy(galleryPhotos.order);
+  return db
+    .select()
+    .from(galleryPhotos)
+    .where(eq(galleryPhotos.destinationId, destinationId))
+    .orderBy(galleryPhotos.order);
 }
 
-export async function createPhoto(data: InsertGalleryPhoto): Promise<GalleryPhoto> {
+export async function createPhoto(
+  data: InsertGalleryPhoto
+): Promise<GalleryPhoto> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const result = await db.insert(galleryPhotos).values(data).returning();
@@ -130,8 +181,10 @@ export async function deletePhoto(id: number): Promise<void> {
   await db.delete(galleryPhotos).where(eq(galleryPhotos.id, id));
 }
 
-// Add this to the bottom of server/db.ts
-export async function updatePhoto(id: number, data: { description: string }): Promise<void> {
+export async function updatePhoto(
+  id: number,
+  data: { description: string }
+): Promise<void> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(galleryPhotos).set(data).where(eq(galleryPhotos.id, id));
@@ -143,7 +196,6 @@ export async function listAllPhotos() {
   // Fetches all photos and orders them randomly for a fresh look every time
   return db.select().from(galleryPhotos).orderBy(`RANDOM()`);
 }
-
 
 // // ── Blog Posts ──────────────────────────────────────────────────────────────
 export async function listBlogPosts() {
@@ -158,8 +210,8 @@ export async function createBlogPost(data: InsertBlogPost) {
 
   const finalData = {
     ...data,
-    author: "sa9ar"
-  }
+    author: "sa9ar",
+  };
   const result = await db.insert(blogPosts).values(data).returning();
   return result[0];
 }
@@ -170,19 +222,27 @@ export async function deleteBlogPost(id: number) {
   await db.delete(blogPosts).where(eq(blogPosts.id, id));
 }
 
-export async function getBlogPostById(id: number): Promise<BlogPost | undefined> {
+export async function getBlogPostById(
+  id: number
+): Promise<BlogPost | undefined> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.select().from(blogPosts).where(eq(blogPosts.id, id)).limit(1);
+  const result = await db
+    .select()
+    .from(blogPosts)
+    .where(eq(blogPosts.id, id))
+    .limit(1);
   return result[0];
 }
 
-export async function updateBlogPost(id: number, data: Partial<InsertBlogPost>): Promise<void> {
+export async function updateBlogPost(
+  id: number,
+  data: Partial<InsertBlogPost>
+): Promise<void> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(blogPosts).set(data).where(eq(blogPosts.id, id));
 }
-
 
 // Newsletter signup
 export async function createNewsletterSignup(data: InsertNewsletterSignup) {
@@ -197,9 +257,15 @@ export async function getStats() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  const [destCount] = await db.select({ count: sql<number>`count(*)` }).from(destinations);
-  const [photoCount] = await db.select({ count: sql<number>`count(*)` }).from(galleryPhotos);
-  const [blogCount] = await db.select({ count: sql<number>`count(*)` }).from(blogPosts);
+  const [destCount] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(destinations);
+  const [photoCount] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(galleryPhotos);
+  const [blogCount] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(blogPosts);
 
   return {
     destinations: Number(destCount?.count || 0),
@@ -208,6 +274,142 @@ export async function getStats() {
   };
 }
 
+// ── Photo Likes & Comments ──────────────────────────────────────────────────
+export async function togglePhotoLike(photoId: number, userId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Check if already liked
+  const existing = await db
+    .select()
+    .from(photoLikes)
+    .where(
+      sql`${photoLikes.photoId} = ${photoId} AND ${photoLikes.userId} = ${userId}`
+    )
+    .limit(1);
+
+  if (existing.length > 0) {
+    // Unlike
+    await db.delete(photoLikes).where(eq(photoLikes.id, existing[0].id));
+    return { liked: false };
+  } else {
+    // Like
+    await db.insert(photoLikes).values({ photoId, userId });
+    return { liked: true };
+  }
+}
+
+export async function getPhotoLikes(photoId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(photoLikes)
+    .where(eq(photoLikes.photoId, photoId));
+
+  return Number(result[0]?.count || 0);
+}
+
+export async function hasUserLikedPhoto(
+  photoId: number,
+  userId: string | undefined
+) {
+  if (!userId) return false;
+  const db = await getDb();
+  if (!db) return false;
+
+  const result = await db
+    .select()
+    .from(photoLikes)
+    .where(
+      sql`${photoLikes.photoId} = ${photoId} AND ${photoLikes.userId} = ${userId}`
+    )
+    .limit(1);
+
+  return result.length > 0;
+}
+
+// ── Blog Likes & Comments ───────────────────────────────────────────────────
+export async function toggleBlogLike(blogId: number, userId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const existing = await db
+    .select()
+    .from(blogLikes)
+    .where(
+      sql`${blogLikes.blogId} = ${blogId} AND ${blogLikes.userId} = ${userId}`
+    )
+    .limit(1);
+
+  if (existing.length > 0) {
+    await db.delete(blogLikes).where(eq(blogLikes.id, existing[0].id));
+    return { liked: false };
+  } else {
+    await db.insert(blogLikes).values({ blogId, userId });
+    return { liked: true };
+  }
+}
+
+export async function getBlogLikes(blogId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(blogLikes)
+    .where(eq(blogLikes.blogId, blogId));
+
+  return Number(result[0]?.count || 0);
+}
+
+export async function hasUserLikedBlog(
+  blogId: number,
+  userId: string | undefined
+) {
+  if (!userId) return false;
+  const db = await getDb();
+  if (!db) return false;
+
+  const result = await db
+    .select()
+    .from(blogLikes)
+    .where(
+      sql`${blogLikes.blogId} = ${blogId} AND ${blogLikes.userId} = ${userId}`
+    )
+    .limit(1);
+
+  return result.length > 0;
+}
+
+export async function createBlogComment(data: InsertBlogComment) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(blogComments).values(data).returning();
+  return result[0];
+}
+
+export async function getBlogComments(blogId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db
+    .select()
+    .from(blogComments)
+    .where(eq(blogComments.blogId, blogId))
+    .orderBy(desc(blogComments.createdAt));
+}
+
+export async function deleteBlogComment(id: number, userId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .delete(blogComments)
+    .where(
+      sql`${blogComments.id} = ${id} AND ${blogComments.userId} = ${userId}`
+    );
+}
 
 // export async function listBlogPosts(): Promise<BlogPost[]> {
 //   const db = await getDb();

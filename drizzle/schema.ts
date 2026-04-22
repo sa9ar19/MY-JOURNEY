@@ -69,6 +69,47 @@ export const newsletterSignups = pgTable("newsletter_signups", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
+// 7. Photo Likes/Reactions Table
+export const photoLikes = pgTable("photo_likes", {
+  id: serial("id").primaryKey(),
+  photoId: integer("photoId")
+    .references(() => galleryPhotos.id, { onDelete: "cascade" })
+    .notNull(),
+  userId: varchar("userId", { length: 64 })
+    .references(() => users.openId, { onDelete: "cascade" })
+    .notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+
+
+// 9. Blog Likes Table
+export const blogLikes = pgTable("blog_likes", {
+  id: serial("id").primaryKey(),
+  blogId: integer("blogId")
+    .references(() => blogPosts.id, { onDelete: "cascade" })
+    .notNull(),
+  userId: varchar("userId", { length: 64 })
+    .references(() => users.openId, { onDelete: "cascade" })
+    .notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+// 10. Blog Comments Table
+export const blogComments = pgTable("blog_comments", {
+  id: serial("id").primaryKey(),
+  blogId: integer("blogId")
+    .references(() => blogPosts.id, { onDelete: "cascade" })
+    .notNull(),
+  userId: varchar("userId", { length: 64 })
+    .references(() => users.openId, { onDelete: "cascade" })
+    .notNull(),
+  userName: text("userName").notNull(),
+  userEmail: text("userEmail"),
+  comment: text("comment").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 
 // Types for your code to use
 export type User = typeof users.$inferSelect;
@@ -84,3 +125,10 @@ export type InsertBlogPost = typeof blogPosts.$inferInsert;
 
 export type NewsletterSignup = typeof newsletterSignups.$inferSelect;
 export type InsertNewsletterSignup = typeof newsletterSignups.$inferInsert;
+
+export type PhotoLike = typeof photoLikes.$inferSelect;
+export type InsertPhotoLike = typeof photoLikes.$inferInsert;
+export type BlogLike = typeof blogLikes.$inferSelect;
+export type InsertBlogLike = typeof blogLikes.$inferInsert;
+export type BlogComment = typeof blogComments.$inferSelect;
+export type InsertBlogComment = typeof blogComments.$inferInsert;

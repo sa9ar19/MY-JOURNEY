@@ -1,343 +1,321 @@
-import { useState, useRef } from "react";
-import { useLocation } from "wouter";
+import { useState, useEffect } from "react";
+import { useParams, useLocation } from "wouter";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, ChevronLeft, Plus, Trash2, ImagePlus, X } from "lucide-react";
-import { toast } from "sonner";
+import {
+  Loader2,
+  ArrowLeft,
+  Save,
+  Upload,
+  X,
+  AlertTriangle,
+  Check,
+} from "lucide-react";
 
-// ── Upload helper ────────────────────────────────────────────────────────────
-async function uploadToCloudinary(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = async () => {
-      try {
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ data: reader.result }),
-        });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error || "Upload failed");
-        resolve(json.url);
-      } catch (err: any) {
-        reject(err);
-      }
-    };
-    reader.onerror = () => reject(new Error("Failed to read file"));
-    reader.readAsDataURL(file);
-  });
-}
-
-// ── Image picker ─────────────────────────────────────────────────────────────
-function ImagePicker({
-  value,
-  onChange,
-  aspectClass = "aspect-[4/3]",
-  label,
-}: {
-  value: string;
-  onChange: (url: string) => void;
-  aspectClass?: string;
-  label?: string;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-
-  async function handleFile(file: File) {
-    if (!file.type.startsWith("image/")) { toast.error("Please select an image file"); return; }
-    setUploading(true);
-    try {
-      const url = await uploadToCloudinary(file);
-      onChange(url);
-    } catch (err: any) {
-      toast.error(err.message || "Upload failed");
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  return (
-    <div>
-      {label && <label className="block text-sm font-medium text-foreground mb-2">{label}</label>}
-      {value ? (
-        <div className={`relative rounded-lg overflow-hidden border border-border ${aspectClass}`}>
-          <img src={value} alt="Preview" className="w-full h-full object-cover" />
-          <button type="button" onClick={() => onChange("")}
-            className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 text-white hover:bg-red-500 transition-colors">
-            <X size={14} />
-          </button>
-        </div>
-      ) : (
-        <div
-          onClick={() => !uploading && inputRef.current?.click()}
-          className={`${aspectClass} rounded-lg border-2 border-dashed border-border bg-muted/30 hover:bg-muted/50 cursor-pointer flex flex-col items-center justify-center gap-2 transition-colors`}
-        >
-          {uploading
-            ? <><Loader2 size={22} className="animate-spin text-muted-foreground" /><p className="text-xs text-muted-foreground">Uploading...</p></>
-            : <><ImagePlus size={22} className="text-muted-foreground" /><p className="text-sm text-muted-foreground">Click to upload</p><p className="text-xs text-muted-foreground">JPG, PNG, WebP</p></>
-          }
-        </div>
-      )}
-      <input ref={inputRef} type="file" accept="image/*" className="hidden"
-        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }} />
-    </div>
-  );
-}
-
-// ── Main page ────────────────────────────────────────────────────────────────
 export default function EditDestination() {
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
-  const [location, navigate] = useLocation();
-  const destId = parseInt(location.split("/").pop() || "0");
+  const { id } = useParams();
+  const destinationId = parseInt(id || "0");
+  const [, navigate] = useLocation();
+  const { user } = useAuth();
 
-  // Destination info state
-  const [editName, setEditName] = useState("");
-  const [editDesc, setEditDesc] = useState("");
-  const [editCoverUrl, setEditCoverUrl] = useState("");
-  const [infoLoaded, setInfoLoaded] = useState(false);
-  const [savingInfo, setSavingInfo] = useState(false);
-
-  // New photo modal state
-  const [addingPhoto, setAddingPhoto] = useState(false);
-  const [photoTitle, setPhotoTitle] = useState("");
-  const [photoDesc, setPhotoDesc] = useState("");
-  const [photoUrl, setPhotoUrl] = useState("");
-
-  // Queries
-  const { data: destinations } = trpc.destinations.list.useQuery(undefined, {
-    onSuccess: (data: any[]) => {
-      if (!infoLoaded) {
-        const dest = data.find((d: any) => d.id === destId);
-        if (dest) {
-          setEditName(dest.name || "");
-          setEditDesc(dest.description || "");
-          setEditCoverUrl(dest.coverImageUrl || "");
-          setInfoLoaded(true);
-        }
-      }
-    },
-  });
-
-  const destination = destinations?.find((d) => d.id === destId);
-
-  const { data: photos, isLoading: photosLoading, refetch: refetchPhotos } =
-    trpc.gallery.getByDestination.useQuery({ destinationId: destId }, { enabled: !!destId });
-
-  // Mutations — using correct router paths from routers.ts
-  const updateDestMutation = trpc.admin.destinations.update.useMutation({
-    onSuccess: () => toast.success("Destination updated!"),
-    onError: (err: any) => toast.error(err.message),
-  });
-
-  const createPhotoMutation = trpc.admin.photos.create.useMutation({
-    onSuccess: () => {
-      toast.success("Photo added!");
-      resetPhotoForm();
-      refetchPhotos();
-    },
-    onError: (err: any) => toast.error(err.message),
-  });
-
-  const deletePhotoMutation = trpc.admin.photos.delete.useMutation({
-    onSuccess: () => { toast.success("Photo deleted!"); refetchPhotos(); },
-    onError: (err: any) => toast.error(err.message),
-  });
-
-  function resetPhotoForm() {
-    setPhotoTitle("");
-    setPhotoDesc("");
-    setPhotoUrl("");
-    setAddingPhoto(false);
-  }
-
-  async function handleSaveInfo() {
-    if (!editName.trim()) { toast.error("Name is required"); return; }
-    setSavingInfo(true);
-    try {
-      await updateDestMutation.mutateAsync({
-        id: destId,
-        name: editName,
-        description: editDesc || undefined,
-        coverImageUrl: editCoverUrl || undefined,
-      });
-    } finally {
-      setSavingInfo(false);
+  // Redirect if not admin
+  useEffect(() => {
+    if (user && user.role !== "admin") {
+      navigate("/");
     }
-  }
+  }, [user, navigate]);
 
-  function handleAddPhoto() {
-    if (!photoUrl) { toast.error("Please upload an image first"); return; }
-    if (!photoTitle.trim()) { toast.error("Title is required"); return; }
-    createPhotoMutation.mutate({
-      destinationId: destId,
-      title: photoTitle,
-      description: photoDesc || undefined,
-      imageUrl: photoUrl,
+  // Form State
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [newCoverFile, setNewCoverFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // UI State
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
+
+  // Fetch destination data
+  const {
+    data: destination,
+    isLoading,
+    error,
+  } = trpc.destinations.getById.useQuery({ id: destinationId });
+
+  // Load data into form
+  useEffect(() => {
+    if (destination) {
+      setTitle(destination.destinationName);
+      setDescription(destination.destinationDetail);
+      setCoverImage(destination.coverUrl);
+      setPreviewUrl(destination.coverUrl);
+    }
+  }, [destination]);
+
+  const updateMutation = trpc.destinations.update.useMutation({
+    onSuccess: () => {
+      showToast("Destination updated successfully!");
+      setSaving(false);
+      setTimeout(() => navigate("/destinations"), 1500);
+    },
+    onError: (err) => {
+      showToast("Failed to update: " + err.message, "error");
+      setSaving(false);
+    },
+  });
+
+  const showToast = (
+    message: string,
+    type: "success" | "error" = "success"
+  ) => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      showToast("Please upload an image file", "error");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("Image must be less than 5MB", "error");
+      return;
+    }
+
+    setNewCoverFile(file);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setPreviewUrl(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSave = async () => {
+    if (!title.trim()) {
+      showToast("Title is required", "error");
+      return;
+    }
+    if (!description.trim()) {
+      showToast("Description is required", "error");
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      // If new cover image, convert to base64
+      let coverImageBase64 = undefined;
+      if (newCoverFile) {
+        coverImageBase64 = await fileToBase64(newCoverFile);
+      }
+
+      // Update destination
+      await updateMutation.mutateAsync({
+        id: destinationId,
+        destinationName: title,
+        destinationDetail: description,
+        coverImageBase64,
+      });
+    } catch (err) {
+      console.error("Save error:", err);
+      setSaving(false);
+    }
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
     });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={48} />
+      </div>
+    );
   }
 
-  if (authLoading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Loader2 className="animate-spin text-muted-foreground" size={32} />
-    </div>
-  );
-
-  if (!isAuthenticated || user?.role !== "admin") {
-    navigate("/login");
-    return null;
+  if (error || !destination) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-destructive text-xl mb-4">Destination not found</p>
+            <button
+              onClick={() => navigate("/destinations")}
+              className="px-6 py-2 bg-primary text-white rounded-full"
+            >
+              Back to Destinations
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col relative">
       <Navbar />
 
-      <main className="flex-1">
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed top-24 right-6 z-[200] animate-in slide-in-from-right-full duration-300">
+          <div
+            className={`flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-md ${
+              toast.type === "success"
+                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500"
+                : "bg-destructive/10 border-destructive/20 text-destructive"
+            }`}
+          >
+            {toast.type === "success" ? (
+              <Check size={20} />
+            ) : (
+              <AlertTriangle size={20} />
+            )}
+            <span className="font-semibold">{toast.message}</span>
+          </div>
+        </div>
+      )}
+
+      <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-20">
         {/* Header */}
-        <section className="section-padding bg-secondary/30">
-          <div className="container">
-            <button onClick={() => navigate("/admin")}
-              className="flex items-center gap-2 text-primary hover:opacity-70 transition-opacity mb-6">
-              <ChevronLeft size={18} /> Back to Admin
+        <div className="mb-8">
+          <button
+            onClick={() => navigate("/destinations")}
+            className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors font-bold uppercase tracking-widest text-sm mb-6"
+          >
+            <ArrowLeft size={18} /> Back to Destinations
+          </button>
+
+          <h1 className="font-serif text-4xl md:text-5xl font-bold">
+            Edit Destination
+          </h1>
+        </div>
+
+        {/* Form */}
+        <div className="space-y-8">
+          {/* Title */}
+          <div>
+            <label className="block text-sm font-bold mb-3">
+              Destination Title *
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g., Himalayas, Paris, Tokyo"
+              className="w-full px-6 py-4 bg-secondary/20 border border-border rounded-2xl outline-none focus:border-primary transition-all text-lg"
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-bold mb-3">
+              Description *
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Describe your journey, experiences, and highlights..."
+              rows={8}
+              className="w-full px-6 py-4 bg-secondary/20 border border-border rounded-2xl outline-none focus:border-primary transition-all resize-none"
+            />
+          </div>
+
+          {/* Cover Image */}
+          <div>
+            <label className="block text-sm font-bold mb-3">
+              Cover Image *
+            </label>
+
+            {/* Image Preview */}
+            {previewUrl && (
+              <div className="mb-4 relative group">
+                <img
+                  src={previewUrl}
+                  alt="Cover preview"
+                  className="w-full h-64 object-cover rounded-2xl border border-border"
+                />
+                <button
+                  onClick={() => {
+                    setPreviewUrl(null);
+                    setNewCoverFile(null);
+                    setCoverImage(null);
+                  }}
+                  className="absolute top-4 right-4 p-2 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            )}
+
+            {/* Upload Button */}
+            <label className="flex items-center justify-center gap-3 w-full px-6 py-4 border-2 border-dashed border-border rounded-2xl cursor-pointer hover:border-primary hover:bg-primary/5 transition-all">
+              <Upload size={20} />
+              <span className="font-semibold">
+                {previewUrl ? "Change Cover Image" : "Upload Cover Image"}
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+            </label>
+            <p className="text-xs text-muted-foreground mt-2">
+              Recommended: High-quality landscape image (max 5MB)
+            </p>
+          </div>
+
+          {/* Save Button */}
+          <div className="flex gap-4 pt-6">
+            <button
+              onClick={() => navigate("/destinations")}
+              className="flex-1 px-6 py-4 border border-border rounded-2xl font-bold hover:bg-secondary transition-all"
+            >
+              Cancel
             </button>
-            <h1 className="font-serif text-4xl font-semibold mb-2 text-foreground">
-              {destination?.name || "Edit Destination"}
-            </h1>
-            <p className="text-muted-foreground">Update destination details and manage its photo gallery</p>
-          </div>
-        </section>
-
-        <section className="section-padding">
-          <div className="container max-w-4xl space-y-10">
-
-            {/* ── Destination Info ── */}
-            <div className="p-6 border border-border bg-card rounded-xl">
-              <h2 className="font-serif text-xl font-semibold mb-5 text-foreground">Destination Info</h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Name *</label>
-                  <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)}
-                    placeholder="e.g. Pokhara, Nepal"
-                    className="w-full px-4 py-2 border border-border rounded-lg bg-input text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Description</label>
-                  <textarea value={editDesc} onChange={(e) => setEditDesc(e.target.value)}
-                    placeholder="Tell the story of this destination..." rows={3}
-                    className="w-full px-4 py-2 border border-border rounded-lg bg-input text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none" />
-                </div>
-
-                <ImagePicker label="Cover Image" value={editCoverUrl} onChange={setEditCoverUrl} aspectClass="aspect-[16/6]" />
-
-                <button onClick={handleSaveInfo} disabled={savingInfo || updateDestMutation.isPending}
-                  className="px-5 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2">
-                  {(savingInfo || updateDestMutation.isPending) && <Loader2 size={14} className="animate-spin" />}
-                  Save Changes
-                </button>
-              </div>
-            </div>
-
-            {/* ── Photos ── */}
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="font-serif text-xl font-semibold text-foreground">Photos</h2>
-                <button onClick={() => setAddingPhoto(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-foreground text-background text-sm font-medium rounded-lg hover:opacity-80 transition-opacity">
-                  <Plus size={15} /> Add Photo
-                </button>
-              </div>
-
-              {photosLoading ? (
-                <div className="flex items-center justify-center py-16">
-                  <Loader2 className="animate-spin text-muted-foreground" size={28} />
-                </div>
+            <button
+              onClick={handleSave}
+              disabled={saving || !title.trim() || !description.trim()}
+              className="flex-1 px-6 py-4 bg-primary text-white rounded-2xl font-bold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"
+            >
+              {saving ? (
+                <>
+                  <Loader2 size={20} className="animate-spin" />
+                  Saving...
+                </>
               ) : (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {photos?.map((photo: any) => (
-                    <div key={photo.id} className="group relative rounded-xl overflow-hidden border border-border bg-card">
-                      <div className="relative h-48 bg-gradient-to-br from-muted to-secondary overflow-hidden">
-                        {photo.imageUrl ? (
-                          <img src={photo.imageUrl} alt={photo.title}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <ImagePlus size={24} className="text-muted-foreground" />
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300" />
-                        <button
-                          onClick={() => { if (confirm("Delete this photo?")) deletePhotoMutation.mutate({ id: photo.id }); }}
-                          disabled={deletePhotoMutation.isPending}
-                          className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 disabled:opacity-30"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
-                      <div className="p-4">
-                        <p className="font-medium text-foreground text-sm truncate">{photo.title}</p>
-                        {photo.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{photo.description}</p>}
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* Persistent add card */}
-                  <button onClick={() => setAddingPhoto(true)}
-                    className="rounded-xl border-2 border-dashed border-border bg-card hover:bg-secondary/40 transition-colors flex flex-col items-center justify-center gap-2 min-h-[220px] text-muted-foreground hover:text-foreground">
-                    <ImagePlus size={24} />
-                    <span className="text-sm font-medium">Add Photo</span>
-                  </button>
-                </div>
+                <>
+                  <Save size={20} />
+                  Save Changes
+                </>
               )}
-            </div>
+            </button>
           </div>
-        </section>
+        </div>
       </main>
 
       <Footer />
-
-      {/* ── Add Photo Modal ── */}
-      {addingPhoto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={resetPhotoForm} />
-          <div className="relative bg-card border border-border rounded-xl shadow-xl w-full max-w-md p-6 z-10">
-            <h2 className="font-serif text-2xl font-semibold text-foreground mb-5">Add Photo</h2>
-
-            <div className="space-y-4">
-              {/* File upload — comes first so user picks image before filling in details */}
-              <ImagePicker label="Photo *" value={photoUrl} onChange={setPhotoUrl} aspectClass="aspect-[4/3]" />
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Title *</label>
-                <input type="text" value={photoTitle} onChange={(e) => setPhotoTitle(e.target.value)}
-                  placeholder="e.g. Sunset over Annapurna"
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Description</label>
-                <textarea value={photoDesc} onChange={(e) => setPhotoDesc(e.target.value)}
-                  placeholder="A short description of this photo..." rows={2}
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none" />
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <button onClick={resetPhotoForm}
-                className="flex-1 px-4 py-2 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-secondary transition-colors">
-                Cancel
-              </button>
-              <button onClick={handleAddPhoto}
-                disabled={createPhotoMutation.isPending || !photoUrl || !photoTitle.trim()}
-                className="flex-1 px-4 py-2 rounded-lg bg-foreground text-background text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2">
-                {createPhotoMutation.isPending && <Loader2 size={14} className="animate-spin" />}
-                Add Photo
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

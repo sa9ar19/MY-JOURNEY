@@ -3,6 +3,7 @@ import { useParams, useLocation } from "wouter";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { trpc } from "@/lib/trpc";
+import ShareButton from "@/components/ShareButton";
 import {
   Loader2,
   Calendar,
@@ -13,6 +14,9 @@ import {
   X,
   Trash2,
   AlertTriangle,
+  Heart,
+  MessageCircle,
+  Send,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -167,6 +171,14 @@ export default function ViewBlog() {
                     </button>
                   </div>
                 )}
+                <div className="flex justify-center mt-4">
+                  <ShareButton
+                    url={`/blogs/${blogId}`}
+                    title={blog.title}
+                    description={blog.content.slice(0, 150) + "..."}
+                    type="blog"
+                  />
+                </div>
               </>
             ) : (
               <div className="space-y-6 max-w-2xl mx-auto">
@@ -206,8 +218,6 @@ export default function ViewBlog() {
             </div>
           )}
 
-          
-
           {/* Content Section */}
           <div className="max-w-2xl mx-auto">
             {!isEditing ? (
@@ -224,6 +234,11 @@ export default function ViewBlog() {
                 className="w-full text-xl leading-relaxed bg-secondary/20 border border-border rounded-3xl p-8 outline-none focus:border-primary transition-all"
               />
             )}
+          </div>
+
+          {/* Likes & Comments Section */}
+          <div className="max-w-2xl mx-auto mt-16 border-t border-border pt-16">
+            <BlogInteractions blogId={blogId} user={user} />
           </div>
         </article>
       </main>
@@ -267,4 +282,149 @@ export default function ViewBlog() {
       <Footer />
     </div>
   );
+
+  function BlogInteractions({ blogId, user }: { blogId: number; user: any }) {
+    const [, navigate] = useLocation();
+    const [commentText, setCommentText] = useState("");
+    const utils = trpc.useUtils();
+
+    const { data: likeInfo } = trpc.blogs.getLikeInfo.useQuery({ blogId });
+    const { data: comments } = trpc.blogs.getComments.useQuery({ blogId });
+
+    const likeMutation = trpc.blogs.toggleLike.useMutation({
+      onSuccess: () => {
+        utils.blogs.getLikeInfo.invalidate({ blogId });
+      },
+    });
+
+    const commentMutation = trpc.blogs.addComment.useMutation({
+      onSuccess: () => {
+        utils.blogs.getComments.invalidate({ blogId });
+        setCommentText("");
+      },
+    });
+
+    const deleteCommentMutation = trpc.blogs.deleteComment.useMutation({
+      onSuccess: () => {
+        utils.blogs.getComments.invalidate({ blogId });
+      },
+    });
+
+    const handleLike = () => {
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+      likeMutation.mutate({ blogId });
+    };
+
+    const handleComment = () => {
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+      if (commentText.trim()) {
+        commentMutation.mutate({ blogId, comment: commentText.trim() });
+      }
+    };
+
+    return (
+      <div className="space-y-8">
+        {/* Like Button */}
+        <div className="flex items-center gap-6">
+          <button
+            onClick={handleLike}
+            className={`flex items-center gap-3 px-6 py-3 rounded-full border transition-all ${
+              likeInfo?.hasLiked
+                ? "bg-red-500 text-white border-red-500"
+                : "border-border hover:border-red-500 hover:text-red-500"
+            }`}
+          >
+            <Heart
+              size={24}
+              fill={likeInfo?.hasLiked ? "currentColor" : "none"}
+            />
+            <span className="font-bold">{likeInfo?.count || 0} Likes</span>
+          </button>
+        </div>
+
+        {/* Comments Section */}
+        <div>
+          <h3 className="text-2xl font-bold mb-6">
+            Comments ({comments?.length || 0})
+          </h3>
+
+          {/* Comment Input */}
+          {user ? (
+            <div className="mb-8">
+              <textarea
+                value={commentText}
+                onChange={e => setCommentText(e.target.value)}
+                placeholder="Share your thoughts..."
+                className="w-full px-4 py-3 bg-secondary/20 border border-border rounded-2xl outline-none focus:border-primary resize-none"
+                rows={3}
+              />
+              <button
+                onClick={handleComment}
+                disabled={!commentText.trim() || commentMutation.isPending}
+                className="mt-3 px-6 py-2 bg-primary text-white rounded-full font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
+              >
+                <Send size={16} />
+                Post Comment
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => navigate("/login")}
+              className="mb-8 w-full py-4 border-2 border-dashed border-border rounded-2xl text-muted-foreground hover:border-primary hover:text-primary transition-all font-semibold"
+            >
+              Login to leave a comment
+            </button>
+          )}
+
+          {/* Comments List */}
+          <div className="space-y-4">
+            {comments?.map((comment: any) => (
+              <div
+                key={comment.id}
+                className="bg-secondary/10 rounded-2xl p-6 border border-border"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <p className="font-bold">{comment.userName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(comment.createdAt).toLocaleDateString("en-US", {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </div>
+                  {user?.openId === comment.userId && (
+                    <button
+                      onClick={() =>
+                        deleteCommentMutation.mutate({ commentId: comment.id })
+                      }
+                      className="text-destructive hover:text-destructive/80 transition-colors"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                </div>
+                <p className="text-foreground/90 leading-relaxed">
+                  {comment.comment}
+                </p>
+              </div>
+            ))}
+
+            {comments?.length === 0 && (
+              <p className="text-center text-muted-foreground py-8">
+                No comments yet. Be the first to comment!
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 }
