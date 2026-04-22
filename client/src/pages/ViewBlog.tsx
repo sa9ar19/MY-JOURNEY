@@ -312,7 +312,7 @@ export default function ViewBlog() {
 
     const handleLike = () => {
       if (!user) {
-        navigate("/login");
+        navigate("/user/login");
         return;
       }
       likeMutation.mutate({ blogId });
@@ -320,7 +320,7 @@ export default function ViewBlog() {
 
     const handleComment = () => {
       if (!user) {
-        navigate("/login");
+        navigate("/user/login");
         return;
       }
       if (commentText.trim()) {
@@ -375,7 +375,7 @@ export default function ViewBlog() {
             </div>
           ) : (
             <button
-              onClick={() => navigate("/login")}
+              onClick={() => navigate("/user/login")}
               className="mb-8 w-full py-4 border-2 border-dashed border-border rounded-2xl text-muted-foreground hover:border-primary hover:text-primary transition-all font-semibold"
             >
               Login to leave a comment

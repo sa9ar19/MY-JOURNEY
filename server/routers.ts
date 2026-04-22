@@ -6,6 +6,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { uploadImageToCloudinary } from "./cloudinary";
 import { sendWelcomeEmail } from "./email";
+import { sdk } from "./_core/sdk";
 import {
   listDestinations,
   getDestinationById,
@@ -33,6 +34,9 @@ import {
   createBlogComment,
   getBlogComments,
   deleteBlogComment,
+  getUserByEmail,
+  getUserByOpenId,
+  upsertUser,
 } from "./db";
 
 // Admin-only procedure
@@ -51,11 +55,45 @@ export const appRouter = router({
 
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
+
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+
+    loginWithEmail: publicProcedure
+      .input(z.object({ email: z.string().email() }))
+      .mutation(async ({ input, ctx }) => {
+        // Check if user exists in database
+        const user = await getUserByEmail(input.email);
+
+        if (!user) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Email not registered. Please sign up first.",
+          });
+        }
+
+        // // Create session for the user
+        // const { sdk } = await import("./_core/auth");
+        // const token = await signToken({ openId: user.openId });
+
+// ... inside loginWithEmail mutation ...
+const token = await sdk.createSessionToken(user.openId, { name: user.name || "" });
+
+
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, token, cookieOptions);
+
+        // Update last signed in
+        await upsertUser({
+          openId: user.openId,
+          lastSignedIn: new Date(),
+        });
+
+        return { success: true, user };
+      }),
   }),
 
   destinations: router({
@@ -114,7 +152,7 @@ export const appRouter = router({
           );
           data.coverUrl = coverUrl;
         }
-        
+
         return updateDestination(id, data);
       }),
 
@@ -290,6 +328,22 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         // Save to database
         const signup = await createNewsletterSignup(input);
+
+        const { nanoid } = await import("nanoid");
+        const openId = `email_${nanoid(20)}`;
+
+        try {
+          await upsertUser({
+            openId: openId,
+            name: input.name,
+            email: input.email,
+            loginMethod: "email",
+            role: "user",
+          });
+        } catch (error) {
+          console.error("[Newsletter] Failed to create user account:", error);
+          // Continue even if user creation fails
+        }
 
         // Send welcome email (import sendWelcomeEmail at top)
         try {

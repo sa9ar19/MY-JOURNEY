@@ -74,7 +74,7 @@ export default function Gallery() {
                   setSelectedImg({ url: photo.imageUrl, id: photo.id })
                 }
                 user={user}
-                onLogin={() => navigate("/login")}
+                onLogin={() => navigate("/user/login")}
               />
             ))}
           </div>
@@ -88,7 +88,7 @@ export default function Gallery() {
           photoId={selectedImg.id}
           onClose={() => setSelectedImg(null)}
           user={user}
-          onLogin={() => navigate("/login")}
+          onLogin={() => navigate("/user/login")}
         />
       )}
 

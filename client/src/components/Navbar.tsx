@@ -84,13 +84,28 @@ export default function Navbar() {
               </a>
             ))}
 
-            {isAdmin ? (
-              <a
-                href="/admin"
-                className="text-xs font-black uppercase tracking-widest px-5 py-2.5 rounded-full bg-primary text-white hover:opacity-90 transition-all shadow-lg shadow-primary/20"
-              >
-                Admin Panel
-              </a>
+            {user ? (
+              // Show user info if logged in
+              <div className="flex items-center gap-4">
+                {isAdmin ? (
+                  <a
+                    href="/admin"
+                    className="text-xs font-black uppercase tracking-widest px-5 py-2.5 rounded-full bg-primary text-white hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+                  >
+                    Admin Panel
+                  </a>
+                ) : (
+                  <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-secondary/50 border border-border">
+                    <div className="w-8 h-8 bg-primary/10 text-primary rounded-full flex items-center justify-center text-xs font-bold">
+                      {user.name?.charAt(0).toUpperCase() ||
+                        user.email?.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="text-sm font-semibold">
+                      {user.name || user.email}
+                    </span>
+                  </div>
+                )}
+              </div>
             ) : (
               <button
                 onClick={() => setSignupOpen(true)}
@@ -247,6 +262,21 @@ export default function Navbar() {
                     )}
                   </button>
                 </form>
+                <div className="mt-6 pt-6 border-t border-border text-center">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Already signed up?
+                  </p>
+                  <button
+                    onClick={() => {
+                      setSignupOpen(false);
+                      // Use wouter's navigate
+                      window.location.href = "/user/login";
+                    }}
+                    className="text-primary hover:underline font-semibold"
+                  >
+                    Login here
+                  </button>
+                </div>
               </>
             )}
           </div>
