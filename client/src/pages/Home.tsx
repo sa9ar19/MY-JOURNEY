@@ -3,7 +3,7 @@ import Footer from "@/components/Footer";
 import { ArrowRight } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
-import {trpc} from "@/lib/trpc";
+import { trpc } from "@/lib/trpc";
 import {
   FaFacebook,
   FaYoutube,
@@ -45,8 +45,7 @@ function HeroSlideshow() {
 
 export default function Home() {
   const [, navigate] = useLocation();
-    const { data: stats, isLoading } = trpc.stats.get.useQuery();
-
+  const { data: stats, isLoading } = trpc.stats.get.useQuery();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -113,7 +112,7 @@ export default function Home() {
                     About This Journey
                   </p>
                   <h2 className="font-serif text-5xl lg:text-6xl font-bold leading-tight text-foreground tracking-tight">
-                    Capturing Moments,  
+                    Capturing Moments,
                     <span className="text-muted-foreground/60 italic">
                       Sharing Stories
                     </span>
@@ -154,15 +153,38 @@ export default function Home() {
           </div>
         </section>
 
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1718972165989515"
+          crossOrigin="anonymous"
+        ></script>
+        <ins
+          className="adsbygoogle"
+          style={{ display: "block" }}
+          data-ad-format="autorelaxed"
+          data-ad-client="ca-pub-1718972165989515"
+          data-ad-slot="6177519437"
+        ></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+
         {/* Stats Section */}
         {/* Stats Section */}
-    <section className="section-padding bg-secondary/30">
+        <section className="section-padding bg-secondary/30">
           <div className="container">
             <div className="grid sm:grid-cols-3 gap-8 text-center">
               {[
-                { number: isLoading ? "..." : `${stats?.destinations || 0}` , label: "Destinations" },
-                { number: isLoading ? "..." : `${stats?.photos || 0}` , label: "Photos" },
-                { number: isLoading ? "..." : `${stats?.stories || 0}` , label: "Stories" },
+                {
+                  number: isLoading ? "..." : `${stats?.destinations || 0}`,
+                  label: "Destinations",
+                },
+                {
+                  number: isLoading ? "..." : `${stats?.photos || 0}`,
+                  label: "Photos",
+                },
+                {
+                  number: isLoading ? "..." : `${stats?.stories || 0}`,
+                  label: "Stories",
+                },
               ].map((stat, i) => (
                 <div
                   key={i}

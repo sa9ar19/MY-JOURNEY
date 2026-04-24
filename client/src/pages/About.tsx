@@ -38,10 +38,11 @@ export default function About() {
                   Hello, I'm Sagar Khadka
                 </h2>
                 <p className="text-muted-foreground leading-relaxed mb-4">
-                  I'm a masters in IT(Cyber Security) student at Charles Darwin University, Sydney. Also a passionate traveler and photographer who believes that
-                  every journey tells a story. For the past several years, I've
-                  been exploring the world, capturing moments, and sharing
-                  experiences through my lens.
+                  I'm a masters in IT(Cyber Security) student at Charles Darwin
+                  University, Sydney. Also a passionate traveler and
+                  photographer who believes that every journey tells a story.
+                  For the past several years, I've been exploring the world,
+                  capturing moments, and sharing experiences through my lens.
                 </p>
                 <p className="text-muted-foreground leading-relaxed mb-4">
                   My journey started with a simple curiosity about different
@@ -172,7 +173,6 @@ export default function About() {
                     description:
                       "Writing long-form travel stories, guides, and photography essays. Growing an audience through storytelling and visual content across social platforms.",
                   },
-                 
                 ].map((exp, i) => (
                   <div
                     key={i}
@@ -196,10 +196,25 @@ export default function About() {
               </div>
             </div>
 
+            
+            <script
+              async
+              src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1718972165989515"
+              crossOrigin="anonymous"
+            ></script>
+            <ins
+              className="adsbygoogle"
+              style={{ display: "block" }}
+              data-ad-format="autorelaxed"
+              data-ad-client="ca-pub-1718972165989515"
+              data-ad-slot="6177519437"
+            ></ins>
+            <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            
             {/* Divider */}
             <div className="divider-line my-16" />
 
-             {/* Interests */}
+            {/* Interests */}
             <div>
               <h2 className="font-serif text-3xl font-semibold mb-8 text-foreground text-center">
                 What I Love
@@ -212,7 +227,7 @@ export default function About() {
                     label: "Explore Destinations",
                     href: "/destinations",
                   },
-                  
+
                   {
                     title: "Photography",
                     desc: "Capturing the beauty of nature and culture",
@@ -241,9 +256,11 @@ export default function About() {
                       <h3 className="font-serif text-xl font-semibold mb-2 text-foreground">
                         {item.title}
                       </h3>
-                      <p className="text-sm text-muted-foreground">{item.desc}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {item.desc}
+                      </p>
                     </div>
- 
+
                     {/* Overlay — fades in on hover */}
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <a
@@ -260,7 +277,6 @@ export default function About() {
           </div>
         </section>
       </main>
- 
 
       <Footer />
     </div>

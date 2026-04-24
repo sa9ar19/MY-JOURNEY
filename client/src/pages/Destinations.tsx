@@ -207,7 +207,7 @@ function DestCard({
   dest: any;
   isAdmin: boolean;
   onNavigate: () => void;
-  onEdit: () => void;  // Add this
+  onEdit: () => void; // Add this
   onDelete: (e: React.MouseEvent) => void;
 }) {
   return (
@@ -241,7 +241,7 @@ function DestCard({
           <button
             onClick={e => {
               e.stopPropagation();
-              onEdit();  // Use the passed function
+              onEdit(); // Use the passed function
             }}
             className="p-2.5 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 hover:bg-white/40 transition-all"
           >
@@ -255,6 +255,20 @@ function DestCard({
           </button>
         </div>
       )}
+
+      <script
+        async
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1718972165989515"
+        crossOrigin="anonymous"
+      ></script>
+      <ins
+        className="adsbygoogle"
+        style={{ display: "block" }}
+        data-ad-format="autorelaxed"
+        data-ad-client="ca-pub-1718972165989515"
+        data-ad-slot="6177519437"
+      ></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
   );
 }

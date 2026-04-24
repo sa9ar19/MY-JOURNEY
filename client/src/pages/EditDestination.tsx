@@ -314,7 +314,22 @@ export default function EditDestination() {
           </div>
         </div>
       </main>
-
+<script
+                async
+                src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1718972165989515"
+                crossOrigin="anonymous"
+              ></script>
+              <ins
+                className="adsbygoogle"
+                style={{ display: "block" }}
+                data-ad-client="ca-pub-1718972165989515"
+                data-ad-slot="5074002930"
+                data-ad-format="auto"
+                data-full-width-responsive="true"
+              ></ins>
+              <script>
+                (adsbygoogle = window.adsbygoogle || []).push({});
+              </script>
       <Footer />
     </div>
   );

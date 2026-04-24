@@ -2,7 +2,7 @@ import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { trpc } from "@/lib/trpc";
-import ShareButton  from "@/components/ShareButton"
+import ShareButton from "@/components/ShareButton";
 import {
   Loader2,
   Maximize2,
@@ -225,15 +225,25 @@ function PhotoLightbox({ photoUrl, photoId, onClose, user, onLogin }: any) {
               />
               <span className="font-bold">{likeInfo?.count || 0}</span>
             </button>
-            
           </div>
         </div>
 
-        
-
         {/* Comment Input */}
-     
       </div>
+
+      <script
+        async
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1718972165989515"
+        crossOrigin="anonymous"
+      ></script>
+      <ins
+        className="adsbygoogle"
+        style={{ display: "block" }}
+        data-ad-format="autorelaxed"
+        data-ad-client="ca-pub-1718972165989515"
+        data-ad-slot="6177519437"
+      ></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
   );
 }

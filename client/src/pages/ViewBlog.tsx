@@ -207,15 +207,33 @@ export default function ViewBlog() {
 
           {/* Cover Image */}
           {blog.coverUrl && (
-            <div className="mb-20 max-w-5xl mx-auto px-6">
-              <div className="rounded-[2.5rem] overflow-hidden shadow-2xl bg-secondary/10">
-                <img
-                  src={blog.coverUrl}
-                  alt={blog.title}
-                  className="w-full h-auto block" // Changed from h-full object-cover to h-auto block
-                />
+            <>
+              <div className="mb-20 max-w-5xl mx-auto px-6">
+                <div className="rounded-[2.5rem] overflow-hidden shadow-2xl bg-secondary/10">
+                  <img
+                    src={blog.coverUrl}
+                    alt={blog.title}
+                    className="w-full h-auto block" // Changed from h-full object-cover to h-auto block
+                  />
+                </div>
               </div>
-            </div>
+              <script
+                async
+                src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1718972165989515"
+                crossOrigin="anonymous"
+              ></script>
+              <ins
+                className="adsbygoogle"
+                style={{ display: "block" }}
+                data-ad-client="ca-pub-1718972165989515"
+                data-ad-slot="5074002930"
+                data-ad-format="auto"
+                data-full-width-responsive="true"
+              ></ins>
+              <script>
+                (adsbygoogle = window.adsbygoogle || []).push({});
+              </script>
+            </>
           )}
 
           {/* Content Section */}
