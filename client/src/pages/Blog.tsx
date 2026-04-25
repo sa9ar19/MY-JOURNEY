@@ -1,6 +1,7 @@
 import { useLocation } from "wouter";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AdUnit from "@/components/AdUnit";
 import { trpc } from "@/lib/trpc";
 import { Loader2, Calendar, User, ArrowRight, FileText } from "lucide-react";
 
@@ -107,19 +108,11 @@ export default function Blogs() {
         )}
       </main>
 
-      <script
-        async
-        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1718972165989515"
-        crossOrigin="anonymous"
-      ></script>
-      <ins
-        className="adsbygoogle"
-        style={{ display: "block" }}
-        data-ad-format="autorelaxed"
-        data-ad-client="ca-pub-1718972165989515"
-        data-ad-slot="6177519437"
-      ></ins>
-      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      <div className="max-w-5xl mx-auto w-full px-6 py-8">
+        <AdUnit slot="6177519437" format="autorelaxed" />
+      </div>
+
+      <Footer />
 
       <Footer />
     </div>

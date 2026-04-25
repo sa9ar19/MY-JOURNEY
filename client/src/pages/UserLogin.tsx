@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AdUnit from "@/components/AdUnit";
 import { trpc } from "@/lib/trpc";
 import { Loader2, Mail, ArrowLeft, Check, AlertTriangle } from "lucide-react";
 
@@ -15,7 +16,7 @@ export default function UserLogin() {
   } | null>(null);
 
   const loginMutation = trpc.auth.loginWithEmail.useMutation({
-    onSuccess: (data) => {
+    onSuccess: data => {
       if (data.success) {
         showToast("Login successful! Redirecting...", "success");
         setTimeout(() => {
@@ -25,7 +26,7 @@ export default function UserLogin() {
         }, 1500);
       }
     },
-    onError: (error) => {
+    onError: error => {
       showToast(error.message || "Login failed", "error");
       setIsLoading(false);
     },
@@ -89,9 +90,7 @@ export default function UserLogin() {
               <div className="w-16 h-16 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mb-4">
                 <Mail size={32} />
               </div>
-              <h1 className="text-3xl font-serif font-bold mb-2">
-                Sign In
-              </h1>
+              <h1 className="text-3xl font-serif font-bold mb-2">Sign In</h1>
               <p className="text-muted-foreground">
                 Enter your email to access your account
               </p>
@@ -107,7 +106,7 @@ export default function UserLogin() {
                   required
                   placeholder="your@email.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value)}
                   className="w-full bg-secondary/10 border border-border rounded-xl px-4 py-3.5 outline-none focus:border-primary transition-all"
                 />
               </div>
@@ -151,22 +150,11 @@ export default function UserLogin() {
           </div>
         </div>
       </main>
-<script
-                async
-                src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1718972165989515"
-                crossOrigin="anonymous"
-              ></script>
-              <ins
-                className="adsbygoogle"
-                style={{ display: "block" }}
-                data-ad-client="ca-pub-1718972165989515"
-                data-ad-slot="5074002930"
-                data-ad-format="auto"
-                data-full-width-responsive="true"
-              ></ins>
-              <script>
-                (adsbygoogle = window.adsbygoogle || []).push({});
-              </script>
+      <div className="max-w-5xl mx-auto w-full px-6 py-8">
+        <AdUnit slot="6177519437" format="autorelaxed" />
+      </div>
+
+      <Footer />
       <Footer />
     </div>
   );

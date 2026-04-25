@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AdUnit from "@/components/AdUnit";
 import { ArrowRight } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
@@ -153,19 +154,9 @@ export default function Home() {
           </div>
         </section>
 
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1718972165989515"
-          crossOrigin="anonymous"
-        ></script>
-        <ins
-          className="adsbygoogle"
-          style={{ display: "block" }}
-          data-ad-format="autorelaxed"
-          data-ad-client="ca-pub-1718972165989515"
-          data-ad-slot="6177519437"
-        ></ins>
-        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+        <div className="container mx-auto px-6 py-8">
+          <AdUnit slot="6177519437" format="autorelaxed" />
+        </div>
 
         {/* Stats Section */}
         {/* Stats Section */}

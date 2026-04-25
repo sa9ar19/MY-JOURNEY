@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams, useLocation } from "wouter";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AdUnit from "@/components/AdUnit";
 import { trpc } from "@/lib/trpc";
 import ShareButton from "@/components/ShareButton";
 import {
@@ -217,22 +218,11 @@ export default function ViewBlog() {
                   />
                 </div>
               </div>
-              <script
-                async
-                src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1718972165989515"
-                crossOrigin="anonymous"
-              ></script>
-              <ins
-                className="adsbygoogle"
-                style={{ display: "block" }}
-                data-ad-client="ca-pub-1718972165989515"
-                data-ad-slot="5074002930"
-                data-ad-format="auto"
-                data-full-width-responsive="true"
-              ></ins>
-              <script>
-                (adsbygoogle = window.adsbygoogle || []).push({});
-              </script>
+              <div className="max-w-5xl mx-auto w-full px-6 py-8">
+                <AdUnit slot="6177519437" format="autorelaxed" />
+              </div>
+
+              <Footer />
             </>
           )}
 

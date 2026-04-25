@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AdUnit from "@/components/AdUnit";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -64,7 +65,7 @@ export default function EditDestination() {
       setSaving(false);
       setTimeout(() => navigate("/destinations"), 1500);
     },
-    onError: (err) => {
+    onError: err => {
       showToast("Failed to update: " + err.message, "error");
       setSaving(false);
     },
@@ -98,7 +99,7 @@ export default function EditDestination() {
 
     // Create preview
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       setPreviewUrl(e.target?.result as string);
     };
     reader.readAsDataURL(file);
@@ -159,7 +160,9 @@ export default function EditDestination() {
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <p className="text-destructive text-xl mb-4">Destination not found</p>
+            <p className="text-destructive text-xl mb-4">
+              Destination not found
+            </p>
             <button
               onClick={() => navigate("/destinations")}
               className="px-6 py-2 bg-primary text-white rounded-full"
@@ -221,7 +224,7 @@ export default function EditDestination() {
             <input
               type="text"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={e => setTitle(e.target.value)}
               placeholder="e.g., Himalayas, Paris, Tokyo"
               className="w-full px-6 py-4 bg-secondary/20 border border-border rounded-2xl outline-none focus:border-primary transition-all text-lg"
             />
@@ -234,7 +237,7 @@ export default function EditDestination() {
             </label>
             <textarea
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={e => setDescription(e.target.value)}
               placeholder="Describe your journey, experiences, and highlights..."
               rows={8}
               className="w-full px-6 py-4 bg-secondary/20 border border-border rounded-2xl outline-none focus:border-primary transition-all resize-none"
@@ -314,22 +317,11 @@ export default function EditDestination() {
           </div>
         </div>
       </main>
-<script
-                async
-                src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1718972165989515"
-                crossOrigin="anonymous"
-              ></script>
-              <ins
-                className="adsbygoogle"
-                style={{ display: "block" }}
-                data-ad-client="ca-pub-1718972165989515"
-                data-ad-slot="5074002930"
-                data-ad-format="auto"
-                data-full-width-responsive="true"
-              ></ins>
-              <script>
-                (adsbygoogle = window.adsbygoogle || []).push({});
-              </script>
+      <div className="max-w-5xl mx-auto w-full px-6 py-8">
+        <AdUnit slot="6177519437" format="autorelaxed" />
+      </div>
+
+      <Footer />
       <Footer />
     </div>
   );
