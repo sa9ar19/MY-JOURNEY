@@ -2,8 +2,9 @@ import { useLocation } from "wouter";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AdUnit from "@/components/AdUnit";
+import SEO from "@/components/SEO";
 import { trpc } from "@/lib/trpc";
-import { Loader2, Calendar, User, ArrowRight, FileText } from "lucide-react";
+import { Loader2, Calendar, ArrowRight, FileText } from "lucide-react";
 
 export default function Blogs() {
   const [, navigate] = useLocation();
@@ -13,6 +14,11 @@ export default function Blogs() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEO 
+        title="Stories & Adventures" 
+        description="Deep dives into the places I've visited, the people I've met, and the lessons I've learned on the road."
+        keywords="travel blog, travel stories, adventure blog, travel writing"
+      />
       <Navbar />
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-20">
@@ -64,6 +70,7 @@ export default function Blogs() {
                         src={blog.coverUrl}
                         alt={blog.title}
                         className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                        loading="lazy"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted-foreground/20">

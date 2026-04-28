@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { trpc } from "@/lib/trpc";
 import ShareButton from "@/components/ShareButton";
+import SEO from "@/components/SEO";
 import {
   Loader2,
   Maximize2,
@@ -16,6 +17,7 @@ export default function Gallery() {
   const [selectedImg, setSelectedImg] = useState<{
     url: string;
     id: number;
+    description?: string;
   } | null>(null);
   const { user } = useAuth();
   const [, navigate] = useLocation();
@@ -31,7 +33,6 @@ export default function Gallery() {
   useEffect(() => {
     if (photos && photos.length > 0) {
       if (imagesLoaded >= photos.length) {
-        // Small delay for smoother transition
         const timer = setTimeout(() => setAllImagesLoaded(true), 500);
         return () => clearTimeout(timer);
       }
@@ -48,6 +49,11 @@ export default function Gallery() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative">
+      <SEO 
+        title="Photo Gallery" 
+        description="Explore a visual collection of moments, landscapes, and stories captured across my travels."
+        keywords="travel photography, landscape photos, travel gallery, adventure photography"
+      />
       <Navbar />
 
       {/* Full Screen Loading UI */}
@@ -104,7 +110,7 @@ export default function Gallery() {
                 photo={photo}
                 onLoad={handleImageLoad}
                 onView={() =>
-                  setSelectedImg({ url: photo.imageUrl, id: photo.id })
+                  setSelectedImg({ url: photo.imageUrl, id: photo.id, description: photo.description })
                 }
                 user={user}
                 onLogin={() => navigate("/user/login")}
@@ -119,6 +125,7 @@ export default function Gallery() {
         <PhotoLightbox
           photoUrl={selectedImg.url}
           photoId={selectedImg.id}
+          description={selectedImg.description}
           onClose={() => setSelectedImg(null)}
           user={user}
           onLogin={() => navigate("/user/login")}
@@ -159,6 +166,7 @@ function PhotoCard({ photo, onView, user, onLogin, onLoad }: any) {
           alt={photo.description || "Gallery image"}
           onLoad={onLoad}
           className="w-full h-auto block transition-transform duration-1000 group-hover:scale-110"
+          loading="lazy"
         />
 
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -203,9 +211,14 @@ function PhotoCard({ photo, onView, user, onLogin, onLoad }: any) {
   );
 }
 
-function PhotoLightbox({ photoUrl, onClose }: any) {
+function PhotoLightbox({ photoUrl, description, onClose }: any) {
   return (
     <div className="fixed inset-0 z-[250] bg-black/95 flex animate-in fade-in duration-300 backdrop-blur-sm">
+      <SEO 
+        title={description || "Gallery Photo"} 
+        description={description || "View this beautiful photo from my journey."}
+        image={photoUrl}
+      />
       <button
         onClick={onClose}
         className="absolute top-8 right-8 text-white/70 hover:text-white transition-colors z-10 p-2 bg-white/10 rounded-full"
@@ -217,11 +230,9 @@ function PhotoLightbox({ photoUrl, onClose }: any) {
         <img
           src={photoUrl}
           className="max-w-full max-h-full object-contain shadow-2xl rounded-lg animate-in zoom-in-95 duration-500"
-          alt="Full size view"
+          alt={description || "Full size view"}
         />
       </div>
     </div>
   );
 }
-
-

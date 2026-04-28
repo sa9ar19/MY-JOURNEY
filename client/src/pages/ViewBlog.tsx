@@ -3,6 +3,7 @@ import { useParams, useLocation } from "wouter";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AdUnit from "@/components/AdUnit";
+import SEO from "@/components/SEO";
 import { trpc } from "@/lib/trpc";
 import ShareButton from "@/components/ShareButton";
 import {
@@ -66,7 +67,6 @@ export default function ViewBlog() {
   const deleteMutation = trpc.blogs.delete.useMutation({
     onSuccess: () => {
       navigate("/blogs");
-      // Note: Toast won't show because we navigate away, but we could pass state
     },
   });
 
@@ -97,6 +97,12 @@ export default function ViewBlog() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative">
+      <SEO 
+        title={blog.title} 
+        description={blog.content.slice(0, 160)}
+        image={blog.coverUrl}
+        type="article"
+      />
       <Navbar />
 
       {/* Toast Notification */}
@@ -208,22 +214,15 @@ export default function ViewBlog() {
 
           {/* Cover Image */}
           {blog.coverUrl && (
-            <>
-              <div className="mb-20 max-w-5xl mx-auto px-6">
-                <div className="rounded-[2.5rem] overflow-hidden shadow-2xl bg-secondary/10">
-                  <img
-                    src={blog.coverUrl}
-                    alt={blog.title}
-                    className="w-full h-auto block" // Changed from h-full object-cover to h-auto block
-                  />
-                </div>
+            <div className="mb-20 max-w-5xl mx-auto px-6">
+              <div className="rounded-[2.5rem] overflow-hidden shadow-2xl bg-secondary/10">
+                <img
+                  src={blog.coverUrl}
+                  alt={blog.title}
+                  className="w-full h-auto block"
+                />
               </div>
-              <div className="max-w-5xl mx-auto w-full px-6 py-8">
-                <AdUnit slot="6177519437" format="autorelaxed" />
-              </div>
-
-              <Footer />
-            </>
+            </div>
           )}
 
           {/* Content Section */}
@@ -287,152 +286,125 @@ export default function ViewBlog() {
         </div>
       )}
 
+      <div className="max-w-5xl mx-auto w-full px-6 py-8">
+        <AdUnit slot="6177519437" format="autorelaxed" />
+      </div>
+
       <Footer />
     </div>
   );
+}
 
-  function BlogInteractions({ blogId, user }: { blogId: number; user: any }) {
-    const [, navigate] = useLocation();
-    const [commentText, setCommentText] = useState("");
-    const utils = trpc.useUtils();
+function BlogInteractions({ blogId, user }: { blogId: number; user: any }) {
+  const [commentText, setCommentText] = useState("");
+  const utils = trpc.useUtils();
 
-    const { data: likeInfo } = trpc.blogs.getLikeInfo.useQuery({ blogId });
-    const { data: comments } = trpc.blogs.getComments.useQuery({ blogId });
+  const { data: likeInfo } = trpc.blogs.getLikeInfo.useQuery({ blogId });
+  const { data: comments } = trpc.blogs.getComments.useQuery({ blogId });
 
-    const likeMutation = trpc.blogs.toggleLike.useMutation({
-      onSuccess: () => {
-        utils.blogs.getLikeInfo.invalidate({ blogId });
-      },
-    });
+  const likeMutation = trpc.blogs.toggleLike.useMutation({
+    onSuccess: () => utils.blogs.getLikeInfo.invalidate({ blogId }),
+  });
 
-    const commentMutation = trpc.blogs.addComment.useMutation({
-      onSuccess: () => {
-        utils.blogs.getComments.invalidate({ blogId });
-        setCommentText("");
-      },
-    });
+  const commentMutation = trpc.blogs.addComment.useMutation({
+    onSuccess: () => {
+      setCommentText("");
+      utils.blogs.getComments.invalidate({ blogId });
+    },
+  });
 
-    const deleteCommentMutation = trpc.blogs.deleteComment.useMutation({
-      onSuccess: () => {
-        utils.blogs.getComments.invalidate({ blogId });
-      },
-    });
+  const deleteCommentMutation = trpc.blogs.deleteComment.useMutation({
+    onSuccess: () => utils.blogs.getComments.invalidate({ blogId }),
+  });
 
-    const handleLike = () => {
-      if (!user) {
-        navigate("/user/login");
-        return;
-      }
-      likeMutation.mutate({ blogId });
-    };
+  const handleLike = () => {
+    if (!user) return;
+    likeMutation.mutate({ blogId });
+  };
 
-    const handleComment = () => {
-      if (!user) {
-        navigate("/user/login");
-        return;
-      }
-      if (commentText.trim()) {
-        commentMutation.mutate({ blogId, comment: commentText.trim() });
-      }
-    };
+  const handleComment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !commentText.trim()) return;
+    commentMutation.mutate({ blogId, comment: commentText });
+  };
 
-    return (
-      <div className="space-y-8">
-        {/* Like Button */}
-        <div className="flex items-center gap-6">
-          <button
-            onClick={handleLike}
-            className={`flex items-center gap-3 px-6 py-3 rounded-full border transition-all ${
-              likeInfo?.hasLiked
-                ? "bg-red-500 text-white border-red-500"
-                : "border-border hover:border-red-500 hover:text-red-500"
-            }`}
-          >
-            <Heart
-              size={24}
-              fill={likeInfo?.hasLiked ? "currentColor" : "none"}
-            />
-            <span className="font-bold">{likeInfo?.count || 0} Likes</span>
-          </button>
-        </div>
+  return (
+    <div className="space-y-12">
+      <div className="flex items-center justify-between">
+        <button
+          onClick={handleLike}
+          className={`flex items-center gap-3 px-6 py-3 rounded-full border transition-all font-bold ${
+            likeInfo?.hasLiked
+              ? "bg-red-500/10 border-red-500/20 text-red-500"
+              : "border-border hover:border-red-500/50 text-muted-foreground hover:text-red-500"
+          }`}
+        >
+          <Heart fill={likeInfo?.hasLiked ? "currentColor" : "none"} size={24} />
+          <span>{likeInfo?.count || 0} Likes</span>
+        </button>
 
-        {/* Comments Section */}
-        <div>
-          <h3 className="text-2xl font-bold mb-6">
-            Comments ({comments?.length || 0})
-          </h3>
-
-          {/* Comment Input */}
-          {user ? (
-            <div className="mb-8">
-              <textarea
-                value={commentText}
-                onChange={e => setCommentText(e.target.value)}
-                placeholder="Share your thoughts..."
-                className="w-full px-4 py-3 bg-secondary/20 border border-border rounded-2xl outline-none focus:border-primary resize-none"
-                rows={3}
-              />
-              <button
-                onClick={handleComment}
-                disabled={!commentText.trim() || commentMutation.isPending}
-                className="mt-3 px-6 py-2 bg-primary text-white rounded-full font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
-              >
-                <Send size={16} />
-                Post Comment
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => navigate("/user/login")}
-              className="mb-8 w-full py-4 border-2 border-dashed border-border rounded-2xl text-muted-foreground hover:border-primary hover:text-primary transition-all font-semibold"
-            >
-              Login to leave a comment
-            </button>
-          )}
-
-          {/* Comments List */}
-          <div className="space-y-4">
-            {comments?.map((comment: any) => (
-              <div
-                key={comment.id}
-                className="bg-secondary/10 rounded-2xl p-6 border border-border"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className="font-bold">{comment.userName}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(comment.createdAt).toLocaleDateString("en-US", {
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </p>
-                  </div>
-                  {user?.openId === comment.userId && (
-                    <button
-                      onClick={() =>
-                        deleteCommentMutation.mutate({ commentId: comment.id })
-                      }
-                      className="text-destructive hover:text-destructive/80 transition-colors"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  )}
-                </div>
-                <p className="text-foreground/90 leading-relaxed">
-                  {comment.comment}
-                </p>
-              </div>
-            ))}
-
-            {comments?.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">
-                No comments yet. Be the first to comment!
-              </p>
-            )}
-          </div>
+        <div className="flex items-center gap-2 text-muted-foreground font-bold">
+          <MessageCircle size={24} />
+          <span>{comments?.length || 0} Comments</span>
         </div>
       </div>
-    );
-  }
+
+      <div className="space-y-8">
+        <h3 className="text-2xl font-bold">Comments</h3>
+        
+        {user ? (
+          <form onSubmit={handleComment} className="relative">
+            <textarea
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              placeholder="Share your thoughts..."
+              className="w-full bg-secondary/10 border border-border rounded-3xl p-6 pr-16 outline-none focus:border-primary transition-all min-h-[120px]"
+            />
+            <button
+              type="submit"
+              disabled={!commentText.trim() || commentMutation.isPending}
+              className="absolute bottom-6 right-6 p-3 bg-primary text-white rounded-2xl hover:opacity-90 disabled:opacity-50 transition-all"
+            >
+              <Send size={20} />
+            </button>
+          </form>
+        ) : (
+          <div className="p-8 bg-secondary/10 border border-dashed border-border rounded-3xl text-center">
+            <p className="text-muted-foreground font-medium">Please sign in to leave a comment.</p>
+          </div>
+        )}
+
+        <div className="space-y-6">
+          {comments?.map((c: any) => (
+            <div key={c.id} className="group p-6 bg-secondary/5 border border-border rounded-3xl">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold">
+                    {c.userName[0]}
+                  </div>
+                  <div>
+                    <p className="font-bold">{c.userName}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                      {new Date(c.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+                {(user?.role === "admin" || user?.openId === c.userId) && (
+                  <button
+                    onClick={() => deleteCommentMutation.mutate({ commentId: c.id })}
+                    className="p-2 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
+              </div>
+              <p className="text-muted-foreground leading-relaxed">{c.comment}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
+
+
