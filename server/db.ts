@@ -478,3 +478,17 @@ export async function deleteBlogComment(id: number, userId: string) {
 //     await db.insert(socialLinks).values(links);
 //   }
 // }
+
+// ── Admin Dashboard Helpers ─────────────────────────────────────────────────
+
+export async function listUsers() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(users).orderBy(desc(users.lastSignedIn));
+}
+
+export async function listNewsletterSignups() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(newsletterSignups).orderBy(desc(newsletterSignups.createdAt));
+}

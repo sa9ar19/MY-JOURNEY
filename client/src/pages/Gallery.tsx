@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import AdUnit from "@/components/AdUnit";
 import { trpc } from "@/lib/trpc";
 import ShareButton from "@/components/ShareButton";
 import {
@@ -9,9 +8,6 @@ import {
   Maximize2,
   X,
   Heart,
-  MessageCircle,
-  Send,
-  Trash2,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
@@ -23,6 +19,8 @@ export default function Gallery() {
   } | null>(null);
   const { user } = useAuth();
   const [, navigate] = useLocation();
+  const [imagesLoaded, setImagesLoaded] = useState(0);
+  const [allImagesLoaded, setAllImagesLoaded] = useState(false);
 
   const {
     data: photos,
@@ -30,11 +28,49 @@ export default function Gallery() {
     error,
   } = trpc.destinations.listAllPhotos.useQuery();
 
+  useEffect(() => {
+    if (photos && photos.length > 0) {
+      if (imagesLoaded >= photos.length) {
+        // Small delay for smoother transition
+        const timer = setTimeout(() => setAllImagesLoaded(true), 500);
+        return () => clearTimeout(timer);
+      }
+    } else if (photos && photos.length === 0) {
+      setAllImagesLoaded(true);
+    }
+  }, [imagesLoaded, photos]);
+
+  const handleImageLoad = () => {
+    setImagesLoaded((prev) => prev + 1);
+  };
+
+  const showLoadingScreen = isLoading || !allImagesLoaded;
+
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col relative">
       <Navbar />
 
-      <main className="flex-1 max-w-[95%] mx-auto w-full px-6 py-20">
+      {/* Full Screen Loading UI */}
+      {showLoadingScreen && (
+        <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-background/80 backdrop-blur-xl transition-all duration-500">
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full animate-pulse" />
+            <Loader2 className="animate-spin text-primary relative z-10" size={64} />
+          </div>
+          <h2 className="mt-8 text-2xl font-serif font-bold tracking-tight">Developing Your Memories</h2>
+          <p className="mt-2 text-muted-foreground font-medium">
+            {photos ? `Loading ${imagesLoaded} of ${photos.length} photos...` : "Connecting to gallery..."}
+          </p>
+          <div className="mt-6 w-48 h-1.5 bg-secondary rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-primary transition-all duration-300 ease-out"
+              style={{ width: photos ? `${(imagesLoaded / photos.length) * 100}%` : "10%" }}
+            />
+          </div>
+        </div>
+      )}
+
+      <main className={`flex-1 max-w-[95%] mx-auto w-full px-6 py-20 transition-all duration-700 ${showLoadingScreen ? "blur-md scale-95 opacity-50" : "blur-0 scale-100 opacity-100"}`}>
         <div className="text-center mb-20">
           <h1 className="font-serif text-5xl md:text-6xl font-bold mb-6">
             Gallery
@@ -46,31 +82,27 @@ export default function Gallery() {
           </p>
         </div>
 
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-32">
-            <Loader2 className="animate-spin text-primary mb-4" size={48} />
-            <p className="text-muted-foreground font-medium">
-              Curating your memories...
-            </p>
-          </div>
-        ) : error ? (
+        {error ? (
           <div className="text-center py-32">
             <p className="text-destructive text-lg">
               Failed to load gallery. Please try again later.
             </p>
           </div>
         ) : !photos || photos.length === 0 ? (
-          <div className="text-center py-32 border-2 border-dashed border-border rounded-3xl">
-            <p className="text-muted-foreground text-lg">
-              No photos found in the gallery yet.
-            </p>
-          </div>
+          !isLoading && (
+            <div className="text-center py-32 border-2 border-dashed border-border rounded-3xl">
+              <p className="text-muted-foreground text-lg">
+                No photos found in the gallery yet.
+              </p>
+            </div>
+          )
         ) : (
           <div className="columns-1 md:columns-2 lg:columns-3 gap-2 space-y-2">
             {photos.map((photo: any) => (
               <PhotoCard
                 key={photo.id}
                 photo={photo}
+                onLoad={handleImageLoad}
                 onView={() =>
                   setSelectedImg({ url: photo.imageUrl, id: photo.id })
                 }
@@ -82,7 +114,7 @@ export default function Gallery() {
         )}
       </main>
 
-      {/* Lightbox Modal with Comments */}
+      {/* Lightbox Modal */}
       {selectedImg && (
         <PhotoLightbox
           photoUrl={selectedImg.url}
@@ -98,7 +130,7 @@ export default function Gallery() {
   );
 }
 
-function PhotoCard({ photo, onView, user, onLogin }: any) {
+function PhotoCard({ photo, onView, user, onLogin, onLoad }: any) {
   const utils = trpc.useUtils();
   const { data: likeInfo } = trpc.photos.getLikeInfo.useQuery({
     photoId: photo.id,
@@ -125,6 +157,7 @@ function PhotoCard({ photo, onView, user, onLogin }: any) {
         <img
           src={photo.imageUrl}
           alt={photo.description || "Gallery image"}
+          onLoad={onLoad}
           className="w-full h-auto block transition-transform duration-1000 group-hover:scale-110"
         />
 
@@ -170,44 +203,25 @@ function PhotoCard({ photo, onView, user, onLogin }: any) {
   );
 }
 
-function PhotoLightbox({ photoUrl, photoId, onClose, user, onLogin }: any) {
-  const [commentText, setCommentText] = useState("");
-  const utils = trpc.useUtils();
-
-  const { data: likeInfo } = trpc.photos.getLikeInfo.useQuery({ photoId });
-
-  const likeMutation = trpc.photos.toggleLike.useMutation({
-    onSuccess: () => {
-      utils.photos.getLikeInfo.invalidate({ photoId });
-    },
-  });
-
-  const handleLike = () => {
-    if (!user) {
-      onLogin();
-      return;
-    }
-    likeMutation.mutate({ photoId });
-  };
-
+function PhotoLightbox({ photoUrl, onClose }: any) {
   return (
-    <div className="fixed inset-0 z-[150] bg-black/95 flex animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[250] bg-black/95 flex animate-in fade-in duration-300 backdrop-blur-sm">
       <button
         onClick={onClose}
-        className="absolute top-8 right-8 text-white/70 hover:text-white transition-colors z-10"
+        className="absolute top-8 right-8 text-white/70 hover:text-white transition-colors z-10 p-2 bg-white/10 rounded-full"
       >
-        <X size={40} />
+        <X size={32} />
       </button>
 
-      <div className="flex-1 flex items-center justify-center p-4">
+      <div className="flex-1 flex items-center justify-center p-4 md:p-12">
         <img
           src={photoUrl}
-          className="max-w-full max-h-full object-contain shadow-2xl rounded-sm"
+          className="max-w-full max-h-full object-contain shadow-2xl rounded-lg animate-in zoom-in-95 duration-500"
           alt="Full size view"
         />
       </div>
-
-      {/* Comments Sidebar */}
     </div>
   );
 }
+
+

@@ -37,6 +37,8 @@ import {
   getUserByEmail,
   getUserByOpenId,
   upsertUser,
+  listUsers,
+  listNewsletterSignups,
 } from "./db";
 
 // Admin-only procedure
@@ -359,6 +361,11 @@ const token = await sdk.createSessionToken(user.openId, { name: user.name || "" 
 
   stats: router({
     get: publicProcedure.query(() => getStats()),
+  }),
+
+  admin: router({
+    listUsers: adminProcedure.query(() => listUsers()),
+    listMessages: adminProcedure.query(() => listNewsletterSignups()),
   }),
 });
 

@@ -123,16 +123,6 @@ export default function About() {
                         issuer: "Udemy",
                         year: "2023",
                       },
-                      {
-                        title: "Wilderness First Aid",
-                        issuer: "Nepal Mountaineering Association",
-                        year: "2022",
-                      },
-                      {
-                        title: "Google Digital Marketing",
-                        issuer: "Google",
-                        year: "2021",
-                      },
                     ].map((cert, i) => (
                       <div key={i} className="border-l-2 border-border pl-4">
                         <p className="font-medium text-foreground">
@@ -158,21 +148,42 @@ export default function About() {
               <h2 className="font-serif text-3xl font-semibold mb-10 text-foreground text-center">
                 Experience
               </h2>
-              <div className="space-y-8">
+              <div className="space-y-8 whitespace-pre-line text-justify">
                 {[
                   {
                     role: "IT Support Intern",
-                    company: "TechSkills Institute",
+                    company: "TechSkills Institute, Sydney",
                     period: "Feb 2026 – May 2026",
                     description:
-                      "Shooting travel and landscape photography across Asia and Europe. Delivering content for travel blogs, tourism campaigns, and editorial publications.",
+                      "• Provide comprehensive technical support to staff and students, troubleshooting hardware, software, and network connectivity issues.\n• Configure and deploy Windows 10/11 workstations and Microsoft 365 applications, ensuring optimal performance and security.\n• Manage Active Directory user accounts, permissions, and group policies to maintain secure access control.\n• Assist with network administration tasks, including DNS, DHCP configuration, and router setup for campus-wide connectivity.\n• Document technical procedures and maintain accurate IT asset inventory using ticketing systems.",
+                  },
+                  {
+                    role: "MERN Stack Developer Intern",
+                    company: "XDezo Technologies, Nepal",
+                    period: "March 2024 - July 2024",
+                    description:
+                      "•	Developed and maintained full-stack web applications using MongoDB, Express.js, React, and Node.js, implementing RESTful APIs and responsive user interfaces \n•	Implemented authentication and authorization features using JWT and OAuth, ensuring secure user data management and access control\n •	Conducted code reviews and debugging sessions, utilizing Git for version control and collaborative development workflows",
+                  },
+                  {
+                    role: "Secondary Teacher",
+                    company: "Holy Angel English School, Nepal",
+                    period: "July 2023 - Mar 2025",
+                    description:
+                      "•	Taught computer science and information technology courses to secondary students, developing engaging curriculum and lesson plans\n •	Managed classroom technology resources and provided technical training to fellow teachers on educational software platforms\n •	Communicated complex technical concepts in an accessible manner, fostering student interest in technology careers",
+                  },
+                  {
+                    role: "Software & Hardware Support ",
+                    company: "Professional Trading House, Nepal",
+                    period: "Feb 2022 – July 2023",
+                    description:
+                      "•	Provided end-to-end IT support for 50+ customers, diagnosing and resolving hardware failures, software conflicts, and system performance issues \n•	Performed system installations, upgrades, and migrations for desktop computers and peripherals, minimizing downtime and ensuring business continuity \n•	Managed and maintained network infrastructure including routers, switches, and wireless access points to ensure reliable connectivity",
                   },
                   {
                     role: "Content Creater & Travel Blogger",
-                    company: "Personal Brand – sa9ar.com",
+                    company: "sa9ar.com",
                     period: "2020 – Present",
                     description:
-                      "Writing long-form travel stories, guides, and photography essays. Growing an audience through storytelling and visual content across social platforms.",
+                      "• Writing long-form travel stories, guides, and photography essays. Growing an audience through storytelling and visual content across social platforms.",
                   },
                 ].map((exp, i) => (
                   <div
@@ -200,8 +211,6 @@ export default function About() {
             <div className="max-w-5xl mx-auto w-full px-6 py-8">
               <AdUnit slot="6177519437" format="autorelaxed" />
             </div>
-
-            
 
             {/* Divider */}
             <div className="divider-line my-16" />
@@ -237,6 +246,12 @@ export default function About() {
                     desc: "Sharing experiences and connecting with people",
                     label: "Read Blogs",
                     href: "/blogs",
+                  },
+                  {
+                    title: "Technology",
+                    desc: "Exploring and Learning about different Techs",
+                    label: "See Projects",
+                    href: "/projects",
                   },
                 ].map((item, i) => (
                   <div

@@ -11,13 +11,17 @@ import {
   AlertCircle,
   MapPin,
   FileText,
+  Users,
+  MessageSquare,
+  Mail,
+  Calendar,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function Admin() {
   const [, navigate] = useLocation();
   const { user, loading: authLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState<"destinations" | "blogs">(
+  const [activeTab, setActiveTab] = useState<"destinations" | "blogs" | "inbox">(
     "destinations"
   );
 
@@ -30,14 +34,6 @@ export default function Admin() {
   const [blogTitle, setBlogTitle] = useState("");
   const [blogContent, setBlogContent] = useState("");
   const [blogImage, setBlogImage] = useState<string | null>(null);
-
-  const tabs = [
-    "Destinations",
-    "Blog Posts",
-    "Gallery Photos",
-    "Inbox", // Add this new tab
-    "Stats",
-  ];
 
   // --- UI States ---
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -157,18 +153,18 @@ export default function Admin() {
         </div>
       )}
 
-      <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-16">
+      <main className="flex-1 max-w-6xl mx-auto w-full px-6 py-16">
         <div className="text-center mb-12">
           <h1 className="font-serif text-4xl font-bold mb-4">
             Admin Dashboard
           </h1>
           <p className="text-muted-foreground">
-            Manage your travel stories and destinations.
+            Manage your travel stories, destinations, and user interactions.
           </p>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex p-1 bg-secondary/30 rounded-2xl mb-10 max-w-md mx-auto">
+        <div className="flex p-1 bg-secondary/30 rounded-2xl mb-10 max-w-xl mx-auto">
           <button
             onClick={() => setActiveTab("destinations")}
             className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all ${activeTab === "destinations" ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"}`}
@@ -180,6 +176,12 @@ export default function Admin() {
             className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all ${activeTab === "blogs" ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"}`}
           >
             <FileText size={18} /> Blog Posts
+          </button>
+          <button
+            onClick={() => setActiveTab("inbox")}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all ${activeTab === "inbox" ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <MessageSquare size={18} /> Inbox & Users
           </button>
         </div>
 
@@ -252,7 +254,7 @@ export default function Admin() {
                 )}
               </button>
             </form>
-          ) : (
+          ) : activeTab === "blogs" ? (
             <form onSubmit={handleSubmitBlog} className="space-y-6">
               <h2 className="text-2xl font-bold mb-6">Write New Blog Post</h2>
               <div className="space-y-2">
@@ -314,10 +316,109 @@ export default function Admin() {
                 )}
               </button>
             </form>
+          ) : (
+            <InboxPanel />
           )}
         </div>
       </main>
       <Footer />
+    </div>
+  );
+}
+
+function InboxPanel() {
+  const { data: users, isLoading: usersLoading } = trpc.admin.listUsers.useQuery();
+  const { data: messages, isLoading: messagesLoading } = trpc.admin.listMessages.useQuery();
+
+  if (usersLoading || messagesLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <Loader2 className="animate-spin text-primary mb-4" size={40} />
+        <p className="text-muted-foreground">Loading dashboard data...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-12">
+      {/* Users Section */}
+      <section>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-primary/10 text-primary rounded-lg">
+            <Users size={24} />
+          </div>
+          <h2 className="text-2xl font-bold">Signed In Users</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {users?.map((u: any) => (
+            <div key={u.openId} className="p-4 bg-secondary/10 border border-border rounded-2xl flex items-center gap-4">
+              <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center text-primary font-bold text-xl">
+                {u.name?.[0] || u.email?.[0] || "?"}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold truncate">{u.name || "Anonymous"}</p>
+                <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Last Seen</p>
+                <p className="text-xs font-medium">
+                  {u.lastSignedIn ? new Date(u.lastSignedIn).toLocaleDateString() : "Never"}
+                </p>
+              </div>
+            </div>
+          ))}
+          {(!users || users.length === 0) && (
+            <p className="text-muted-foreground italic col-span-full text-center py-8">No users have signed in yet.</p>
+          )}
+        </div>
+      </section>
+
+      <div className="h-px bg-border" />
+
+      {/* Messages Section */}
+      <section>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-primary/10 text-primary rounded-lg">
+            <MessageSquare size={24} />
+          </div>
+          <h2 className="text-2xl font-bold">User Messages</h2>
+        </div>
+
+        <div className="space-y-4">
+          {messages?.map((m: any) => (
+            <div key={m.id} className="p-6 bg-secondary/5 border border-border rounded-3xl hover:bg-secondary/10 transition-colors">
+              <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
+                <div>
+                  <h3 className="font-bold text-lg">{m.name}</h3>
+                  <div className="flex items-center gap-4 mt-1">
+                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Mail size={14} /> {m.email}
+                    </span>
+                    {m.contact && (
+                      <span className="text-xs text-muted-foreground">
+                        • {m.contact}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs font-medium bg-secondary/20 px-3 py-1 rounded-full">
+                  <Calendar size={14} />
+                  {new Date(m.createdAt).toLocaleDateString()}
+                </div>
+              </div>
+              <div className="bg-card/50 p-4 rounded-2xl border border-border/50">
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                  {m.message || <span className="italic text-muted-foreground">No message content provided.</span>}
+                </p>
+              </div>
+            </div>
+          ))}
+          {(!messages || messages.length === 0) && (
+            <p className="text-muted-foreground italic text-center py-8">No messages received yet.</p>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
