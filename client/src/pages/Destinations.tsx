@@ -192,7 +192,6 @@ export default function Destinations() {
           </div>
         </div>
       )}
-
       <Footer />
     </div>
   );
@@ -260,8 +259,7 @@ function DestCard({
       <div className="max-w-5xl mx-auto w-full px-6 py-8">
         <AdUnit slot="6177519437" format="autorelaxed" />
       </div>
-
-      <Footer />
     </div>
   );
+  <Footer />;
 }

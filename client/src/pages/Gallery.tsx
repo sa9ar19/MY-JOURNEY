@@ -208,35 +208,6 @@ function PhotoLightbox({ photoUrl, photoId, onClose, user, onLogin }: any) {
       </div>
 
       {/* Comments Sidebar */}
-      <div className="w-full md:w-96 bg-background border-l border-border flex flex-col max-h-screen">
-        {/* Header */}
-        <div className="p-6 border-b border-border">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handleLike}
-              className={`flex items-center gap-2 transition-colors ${
-                likeInfo?.hasLiked
-                  ? "text-red-500"
-                  : "text-muted-foreground hover:text-red-500"
-              }`}
-            >
-              <Heart
-                size={24}
-                fill={likeInfo?.hasLiked ? "currentColor" : "none"}
-              />
-              <span className="font-bold">{likeInfo?.count || 0}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Comment Input */}
-      </div>
-
-      <div className="max-w-5xl mx-auto w-full px-6 py-8">
-        <AdUnit slot="6177519437" format="autorelaxed" />
-      </div>
-
-      <Footer />
     </div>
   );
 }

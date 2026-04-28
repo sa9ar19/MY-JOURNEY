@@ -201,7 +201,7 @@ export default function About() {
               <AdUnit slot="6177519437" format="autorelaxed" />
             </div>
 
-            <Footer />
+            
 
             {/* Divider */}
             <div className="divider-line my-16" />

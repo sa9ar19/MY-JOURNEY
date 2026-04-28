@@ -112,7 +112,6 @@ export default function Blogs() {
         <AdUnit slot="6177519437" format="autorelaxed" />
       </div>
 
-      <Footer />
 
       <Footer />
     </div>
