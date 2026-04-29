@@ -17,6 +17,23 @@ const SLIDES = [
   "/images/slider1.jpg",
   "/images/slider2.jpg",
   "/images/slider3.jpg",
+  "/images/slider4.jpg",
+  "/images/slider5.jpg",
+  "/images/slider6.jpg",
+  "/images/slider7.jpg",
+  "/images/slider8.jpg",
+  "/images/slider9.jpg",
+  "/images/slider10.jpg",
+  "/images/slider11.jpg",
+  "/images/slider12.jpg",
+  "/images/slider13.jpg",
+  "/images/slider14.jpg",
+  "/images/slider15.jpg",
+  "/images/slider16.jpg",
+  "/images/slider17.jpg",
+  "/images/slider18.jpg",
+  "/images/slider19.jpg",
+  "/images/slider20.jpg",
 ];
 
 function HeroSlideshow() {
