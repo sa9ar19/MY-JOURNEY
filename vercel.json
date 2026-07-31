@@ -1,7 +1,11 @@
 {
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/api/(.*)",
+      "destination": "https://api.sa9ar.com/api/$1"
+    },
+    {
+      "source": "/(.* )",
       "destination": "/index.html"
     }
   ]
